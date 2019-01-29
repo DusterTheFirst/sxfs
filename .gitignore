@@ -1,0 +1,12 @@
+# Sensitive files
+users.json
+
+# Built files
+*.js
+*.css
+
+# Uploads directory
+uploads
+
+# Dependencies
+node_modules

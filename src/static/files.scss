@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+
+@mixin noselect {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+html, body {
+    font-family: 'Roboto', sans-serif;
+    margin: 10px;
+
+    a {
+        text-decoration: none;
+        color: black;
+    }
+}
+
+h1 {
+    display: inline-block;
+    @include noselect;
+}
+
+body[data-sort=size] .size-sort {
+    text-decoration: underline;
+}
+
+body[data-sort=""] .default-sort {
+    text-decoration: underline;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+
+    th, td {
+        border-bottom: 1px solid #ddd;
+        padding: 15px;
+    }
+
+    th {
+        height: 20px;
+        text-align: left;
+    
+        @include noselect;
+
+        a {
+            color: black;
+
+            &:hover {
+                color: #3257a8;
+            }
+        }
+    }
+
+    tr {
+        td {
+            a {
+                padding: 15px 0;
+
+                &:hover {
+                    color: #3257a8;
+                }
+            }
+        }
+        
+        &:nth-child(even) {
+            background: #c5c5c5;
+        }
+    }
+}
+
+.upload {
+    display: block;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    box-shadow: 0px 0px 10px #3a3a3a;
+    background: rgb(52, 150, 52);
+    border-radius: 100px;
+    cursor: pointer;
+    z-index: 2;
+
+    height: 55px;
+    width: 55px;
+
+    div {
+        transform: translate(-50%, -50%);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+    
+        color: white;
+    }
+}
+
+.delete {
+    text-align: center;
+    width: 100px;
+    
+    @include noselect;
+
+    a {
+        color: #b30202;
+    }
+} 
+
+.wipe {
+    background: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: #b30202;
+    transition: .5s background-color, .5s color;
+    border: 2px solid #b30202;
+
+    margin-left: 20px;
+    cursor: pointer;
+
+    @include noselect;
+
+    &:hover {
+        background: #b30202;
+        padding: 5px 10px;
+        border-radius: 5px;
+        color: #fff;
+    }
+}
