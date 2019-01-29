@@ -31,7 +31,9 @@
         "typescript": "^3.2.4"
     },
     "scripts": {
-        "scss": "node-sass -w ./src/ -o ./src/ --output-style compressed",
+        "scss-watch": "npm run scss -s -- -w",
+        "scss": "node-sass ./src/ -o ./src/ --output-style compressed",
+        "compile": "tsc && npm run scss",
         "lint": "tslint --project ./"
     }
 }

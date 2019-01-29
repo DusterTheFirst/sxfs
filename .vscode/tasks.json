@@ -14,7 +14,7 @@
         },
         {
             "type": "npm",
-            "script": "scss",
+            "script": "scss-watch",
             "problemMatcher": [],
             "group": "build"
         }
