@@ -2,7 +2,7 @@
     "name": "sharex",
     "version": "0.0.1",
     "private": true,
-    "main": "build/app.js",
+    "main": "src/app.js",
     "author": "DusterTheFirst <dusterthefirst@gmail.com> (Zachary Kohnen)",
     "license": "GPL-3.0",
     "dependencies": {

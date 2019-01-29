@@ -148,4 +148,6 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
     console.error(err);
 });
 
-app.listen(4299);
+app.listen(4299, () => {
+    console.log("ShareX server started on port 4299");
+});
