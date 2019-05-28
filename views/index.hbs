@@ -4,14 +4,14 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <title>404 - Not Found</title>
+        <title>Document</title>
     </head>
     <body>
-        <h1>404 - Not Found</h1>
-        {{#if delete}}
-            <p>"{{file}}" does not exist and cannot be deleted</p>
-        {{else}}
-            <p>"{{url}}" does not exist</p>
-        {{/if}}
+        <h2>Dir Listing for {{dir}}/</h2>
+        <ul>
+            {{#each paths}}
+                <li>{{this}}</li>
+            {{/each}}
+        </ul>
     </body>
 </html>

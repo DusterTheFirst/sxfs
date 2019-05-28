@@ -1,12 +1,6 @@
-# Sensitive files
-users.json
+# Rust build files
+/target
+**/*.rs.bk
 
-# Built files
-*.js
-*.css
-
-# Uploads directory
-uploads
-
-# Dependencies
-node_modules
+# Program files
+/uploads
