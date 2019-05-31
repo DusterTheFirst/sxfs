@@ -4,12 +4,14 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <title>404 - Not Found</title>
+        <title>401 - Unauthorized</title>
     </head>
     <body>
         <center>
-            <h1>404 - Not Found</h1>
-            <p>"{{uri}}" is not a valid path.</p>
+            <h1>401 - Unauthorized</h1>
+            <p>You are not authorized to <strong>{{method}}</strong> "{{uri}}"</p>
+            <pre>{{reason}}</pre>
+            <img src="https://i.ytimg.com/vi/m_xdCWn1D9g/hqdefault_live.jpg"/>
             <hr>
             <sub>sxfs</sub>
         </center>

@@ -12,101 +12,28 @@ use std::fs;
 
 use handlebars::Handlebars;
 
-#[derive(RustEmbed)]
-#[folder = "src/views/templates"]
-struct HBSTemplates;
+use colored::*;
 
-#[derive(RustEmbed)]
-#[folder = "src/views/partials"]
-struct HBSPartials;
+mod gaurds;
+mod paths;
+mod templates;
+mod config;
+
+use config::Config;
 
 lazy_static! {
     pub static ref HBS: Mutex<Handlebars> = Mutex::new(Handlebars::new());
 }
 
-mod gaurds {
-    use rocket::request::{Request, FromRequest, Outcome};
-    use rocket::http::Status;
-
-    pub struct AuthGaurd(String);
-
-    #[derive(Debug)]
-    pub enum AuthGaurdError {
-        Missing,
-        Invalid,
-        BadCount
-    }
-
-    impl AuthGaurd {
-        pub fn is_valid(token: &str) -> bool {
-            token == "token"
-        }
-    }
-
-    impl<'a, 'r> FromRequest<'a, 'r> for AuthGaurd {
-        type Error = AuthGaurdError;
-
-        fn from_request(request: &'a Request<'r>) -> Outcome<Self, Self::Error> {
-            let tokens: Vec<_> = request.headers().get("Authorization").collect();
-
-            match tokens.len() {
-                0 => Outcome::Failure((Status::Unauthorized, AuthGaurdError::Missing)),
-                1 if Self::is_valid(tokens[0]) => Outcome::Success(AuthGaurd(tokens[0].to_string())),
-                1 => Outcome::Failure((Status::Unauthorized, AuthGaurdError::Invalid)),
-                _ => Outcome::Failure((Status::BadRequest, AuthGaurdError::BadCount)),
-            }
-        }
-    }
-}
-
-mod paths {
-    use std::path::PathBuf;
-    use std::fs;
-    use rocket::http::{ContentType, RawStr};
-    use rocket::response::{content::Content};
-    use rocket::Request;
-    use crate::HBS;
-    use crate::gaurds;
-
-    #[catch(404)]
-    pub fn not_found(req: &Request) -> Content<String> {
-        Content(ContentType::HTML, HBS.lock().unwrap().render("404", &json!({"uri": req.uri().path()})).unwrap())
-    }
-
-    #[get("/")]
-    pub fn index() -> Content<String> {
-        match fs::read_dir("uploads") {
-            Err(why) => Content(ContentType::Plain, format!("! {:?}", why.kind())),
-            Ok(paths) => {
-                let paths_arr: Vec<PathBuf> = paths.collect::<Vec<_>>().iter().map(|x| x.as_ref().unwrap().path()).collect();
-                Content(ContentType::HTML, HBS.lock().unwrap().render("index", &json!({"dir": "uploads", "paths": paths_arr})).unwrap())
-            },
-        }
-    }
-
-    #[get("/u/<filename..>")]
-    pub fn view_upload(filename: PathBuf) -> String {
-        format!("FILE\n\nFILENAME: {:?}", filename)
-    }
-    #[post("/upload")]
-    pub fn make_upload(auth: gaurds::AuthGaurd) -> String {
-        format!("you will upload")
-    }
-    #[get("/r/<id>")]
-    pub fn redirect_short_url(id: &RawStr) -> String {
-        format!("URL REDIRECT\n\nID: {}", id)
-    }
-}
-
 fn main() -> std::io::Result<()> {
     // TODO: Config
-    println!("Running SXFS from {}", std::env::current_dir().unwrap().display());
+    println!("{} {}", "Running SXFS from".green(), format!("{:?}", std::env::current_dir().unwrap()).blue());
 
-    let uploads_dir = &Path::new("uploads");
+    let uploads_dir = Path::new("uploads");
     match fs::create_dir(uploads_dir) {
-        Ok(()) => println!("Created upload directory {:?}", uploads_dir),
+        Ok(()) => println!("{} {}", "Created upload directory".yellow(), format!("{:?}", uploads_dir).blue()),
         Err(e) => match e.kind() {
-            ErrorKind::AlreadyExists => println!("Found upload directory {:?}", uploads_dir),
+            ErrorKind::AlreadyExists => println!("{} {}", "Found upload directory".green(), format!("{:?}", uploads_dir).blue()),
             _ => return Err(e)
         }
     }
@@ -114,39 +41,44 @@ fn main() -> std::io::Result<()> {
     // TODO: User defined templates
     // Regester templates
     HBS.lock().unwrap().set_strict_mode(true);
-    println!("Loading templates...");
-    for template_file in HBSTemplates::iter() {
-        print!("{}... ", template_file);
-        let mut regestry = HBS.lock().unwrap();
-        let raw_file = &HBSTemplates::get(&template_file).unwrap();
-        let file = std::str::from_utf8(raw_file).unwrap();
-        let template_name = template_file.replace(".hbs", "");
-        match regestry.register_template_string(&template_name, file) {
-            Ok(()) => println!("OK"),
-            Err(reason) => println!("FAIL {:#?}", reason)
-        }
-    }
-    println!("Loading partials...");
-    for partial_file in HBSPartials::iter() {
-        print!("{}... ", partial_file);
-        let mut regestry = HBS.lock().unwrap();
-        let raw_file = &HBSPartials::get(&partial_file).unwrap();
-        let file = std::str::from_utf8(raw_file).unwrap();
-        let partial_name = partial_file.replace(".hbs", "");
-        match regestry.register_partial(&partial_name, file) {
-            Ok(()) => println!("OK"),
-            Err(reason) => println!("FAIL {:#?}", reason)
-        }
-        
-    }
-    // let template_dir = &Path::new("views");
-    // HBS.lock().unwrap().register_templates_directory(".hbs", template_dir);
+    println!("{}", "Loading templates...".yellow());
+    templates::load_templates().unwrap();
+    println!("{}", "Loading partials...".yellow());
+    templates::load_partials().unwrap();
 
-    // println!("Regestered templates: {:?}", HBS.lock().unwrap().get_templates().keys());
+    // Load config
+    println!("{}", "Loading Config...".yellow());
+    let config_path = Path::new("Config.toml");
+    let config_file = fs::read_to_string(config_path);
+    let config_file = match config_file {
+        Err(e) => match e.kind() {
+            ErrorKind::NotFound => {
+                let config_default = toml::to_string(&Config::default()).unwrap();
+                
+                fs::write(config_path, &config_default).unwrap();
 
+                config_default
+            },
+            _ => {
+                println!("{:?}", e);
+                return Ok(());
+            }
+        },
+        Ok(file) => file
+    };
+    let config: Config = match toml::from_str(&config_file) {
+        Ok(c) => c,
+        Err(e) => {
+            println!("{}\n{:#?}", "Error parsing config".red(), e);
+            return Ok(());
+        }
+    };
+
+    println!("{:#?}", config);
 
     rocket::ignite().register(catchers![
-        paths::not_found
+        paths::not_found,
+        paths::unauthorized
     ]).mount("/", routes![
         paths::index,
         paths::view_upload,
