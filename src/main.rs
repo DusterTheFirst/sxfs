@@ -1,9 +1,11 @@
 #![feature(proc_macro_hygiene, decl_macro, type_alias_enum_variants)]
+#![warn(clippy::all)]
 
 #[macro_use] extern crate rocket;
 #[macro_use] extern crate serde_json;
 #[macro_use] extern crate lazy_static;
 #[macro_use] extern crate rust_embed;
+#[macro_use] extern crate log;
 
 use std::path::{Path};
 use std::io::ErrorKind;
@@ -18,22 +20,52 @@ mod gaurds;
 mod paths;
 mod templates;
 mod config;
+mod logger;
 
-use config::Config;
+use config::{Config, ConfigError};
 
 lazy_static! {
     pub static ref HBS: Mutex<Handlebars> = Mutex::new(Handlebars::new());
 }
 
 fn main() -> std::io::Result<()> {
-    // TODO: Config
-    println!("{} {}", "Running SXFS from".green(), format!("{:?}", std::env::current_dir().unwrap()).blue());
+    // Init logger
+    logger::init(log::LevelFilter::Trace).expect("Failed to initialize logger");
+    
+    error!("1");
+    warn!("2");
+    info!("3");
+    debug!("4");
+    trace!("5");
 
-    let uploads_dir = Path::new("uploads");
-    match fs::create_dir(uploads_dir) {
-        Ok(()) => println!("{} {}", "Created upload directory".yellow(), format!("{:?}", uploads_dir).blue()),
+    trace!("{} {}", "Running SXFS from".green(), std::env::current_dir().unwrap().to_string_lossy().blue());
+
+    // Load config
+    debug!(target: "config", "{}", "Loading Config...".yellow());
+    let config_path = Path::new("Config.toml");
+    let config: Config = match Config::load(config_path) {
+
+        Err(er) => {
+            // Send error
+            match er {
+                ConfigError::Create(e) => error!(target: "config", "{} {:?}", "Error creating config file:".red(), e),
+                ConfigError::Parse(e) => error!(target: "config", "{}\n{:#?}", "Error parsing config:".red(), e),
+                ConfigError::Read(e) => error!(target: "config", "{} {:?}", "Error reading config file:".red(), e),
+                ConfigError::Write(e) => error!(target: "config", "{} {:?}", "Error writing to config file:".red(), e),
+            };
+            // Panic
+            panic!("Failed setting up config")
+        },
+        Ok(config) => {
+            debug!(target: "config", "Loaded Config: {:#?}", config);
+            config
+        }
+    };
+
+    match fs::create_dir(&config.uploads_dir) {
+        Ok(_) => info!("{} {}", "Created upload directory".yellow(), (&config.uploads_dir).to_string_lossy().blue()),
         Err(e) => match e.kind() {
-            ErrorKind::AlreadyExists => println!("{} {}", "Found upload directory".green(), format!("{:?}", uploads_dir).blue()),
+            ErrorKind::AlreadyExists => debug!("{} {}", "Found upload directory".green(), (&config.uploads_dir).to_string_lossy().blue()),
             _ => return Err(e)
         }
     }
@@ -41,40 +73,10 @@ fn main() -> std::io::Result<()> {
     // TODO: User defined templates
     // Regester templates
     HBS.lock().unwrap().set_strict_mode(true);
-    println!("{}", "Loading templates...".yellow());
+    debug!(target: "handlebars", "{}", "Loading templates...".yellow());
     templates::load_templates().unwrap();
-    println!("{}", "Loading partials...".yellow());
+    debug!(target: "handlebars", "{}", "Loading partials...".yellow());
     templates::load_partials().unwrap();
-
-    // Load config
-    println!("{}", "Loading Config...".yellow());
-    let config_path = Path::new("Config.toml");
-    let config_file = fs::read_to_string(config_path);
-    let config_file = match config_file {
-        Err(e) => match e.kind() {
-            ErrorKind::NotFound => {
-                let config_default = toml::to_string(&Config::default()).unwrap();
-                
-                fs::write(config_path, &config_default).unwrap();
-
-                config_default
-            },
-            _ => {
-                println!("{:?}", e);
-                return Ok(());
-            }
-        },
-        Ok(file) => file
-    };
-    let config: Config = match toml::from_str(&config_file) {
-        Ok(c) => c,
-        Err(e) => {
-            println!("{}\n{:#?}", "Error parsing config".red(), e);
-            return Ok(());
-        }
-    };
-
-    println!("{:#?}", config);
 
     rocket::ignite().register(catchers![
         paths::not_found,

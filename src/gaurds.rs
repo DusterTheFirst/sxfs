@@ -13,7 +13,7 @@ pub enum AuthGaurdError {
 
 impl AuthGaurd {
     pub fn is_valid(token: &str) -> bool {
-        println!("{}", token);
+        debug!("{}", token);
         let token = token.replace("Basic ", "");
         let vector = match base64::decode(&token) {
             Ok(vec) => vec,
@@ -23,9 +23,9 @@ impl AuthGaurd {
             Ok(string) => string,
             _ => return false
         };
-        println!("{}", string);
+        debug!("{}", string);
 
-        let mut split = string.splitn(2, ":");
+        let mut split = string.splitn(2, ':');
 
         let username: &str = match split.next() {
             Some(x) => x,
@@ -36,7 +36,7 @@ impl AuthGaurd {
             _ => return false
         };
 
-        println!("Username: {}\nPassword: {}", username.to_lowercase(), password);
+        debug!("Username: {}\nPassword: {}", username.to_lowercase(), password);
 
         true
     }

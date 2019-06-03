@@ -31,8 +31,8 @@ pub fn view_upload(filename: PathBuf) -> String {
     format!("FILE\n\nFILENAME: {:?}", filename)
 }
 #[post("/upload")]
-pub fn make_upload(auth: gaurds::AuthGaurd) -> String {
-    format!("you will upload")
+pub fn make_upload(_auth: gaurds::AuthGaurd) -> String {
+    "you will upload".to_owned()
 }
 #[get("/r/<id>")]
 pub fn redirect_short_url(id: &RawStr) -> String {

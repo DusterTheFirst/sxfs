@@ -13,8 +13,6 @@ struct HBSPartials;
 //TODO: Make into iterator?
 pub fn load_templates() -> Result<(), TemplateError> {
     for template_file in HBSTemplates::iter() {
-        print!("[    ] {}", template_file.blue());
-
         let mut regestry = HBS.lock().unwrap();
         let raw_file = &HBSTemplates::get(&template_file).unwrap();
         let file = std::str::from_utf8(raw_file).unwrap();
@@ -22,9 +20,10 @@ pub fn load_templates() -> Result<(), TemplateError> {
 
         print!("\r");
         match regestry.register_template_string(&template_name, file) {
-            Ok(()) => println!("[ {} ]", "OK".green()),
+            Ok(()) => debug!("{} - {}", template_file.blue(), "OK".green()),
             Err(reason) => {
-                println!("[{}]\n{}", "FAIL".red(), reason);
+                error!("{} - {}", template_file.blue(), "FAIL".red());
+                trace!("{}", reason);
                 return Err(reason);
             }
         }
@@ -35,8 +34,6 @@ pub fn load_templates() -> Result<(), TemplateError> {
 
 pub fn load_partials() -> Result<(), TemplateError>  {
     for partial_file in HBSPartials::iter() {
-        print!("[    ] {}", partial_file.blue());
-
         let mut regestry = HBS.lock().unwrap();
         let raw_file = &HBSPartials::get(&partial_file).unwrap();
         let file = std::str::from_utf8(raw_file).unwrap();
@@ -44,9 +41,10 @@ pub fn load_partials() -> Result<(), TemplateError>  {
 
         print!("\r");
         match regestry.register_partial(&partial_name, file) {
-            Ok(()) => println!("[ {} ]", "OK".green()),
+            Ok(()) => debug!("{} - {}", partial_file.blue(), "OK".green()),
             Err(reason) =>{
-                println!("[{}]\n{}", "FAIL".red(), reason);
+                error!("{} - {}", partial_file.blue(), "FAIL".red());
+                trace!("{}", reason);
                 return Err(reason);
             }
         }   
