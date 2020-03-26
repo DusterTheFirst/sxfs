@@ -3,7 +3,7 @@
     "Name": "{{name}} (Uploader)",
     "DestinationType": "ImageUploader, TextUploader, FileUploader",
     "RequestMethod": "POST",
-    "RequestURL": "{{proto}}://{{upload_domain}}/upload",
+    "RequestURL": "{{proto}}://{{upload_domain}}/u",
     "Body": "MultipartFormData",
     "Headers": {
         "X-Upload-Token": "{{upload_token}}"

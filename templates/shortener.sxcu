@@ -3,7 +3,7 @@
     "Name": "{{name}} (URL shortener)",
     "DestinationType": "URLShortener",
     "RequestMethod": "POST",
-    "RequestURL": "{{proto}}://{{domain}}/shorten",
+    "RequestURL": "{{proto}}://{{domain}}/l",
     "Headers": {
         "X-Upload-Token": "{{upload_token}}"
     },
