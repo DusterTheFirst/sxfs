@@ -32,7 +32,7 @@ pub struct Config {
 
 impl Config {
     /// Load a config file from the filesystem or create one based on the template
-    /// 
+    ///
     /// # Errors
     /// - If there is a problem reading the file
     /// - If there is a problem parsing the file

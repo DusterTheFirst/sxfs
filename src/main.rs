@@ -1,5 +1,5 @@
 //! ShareX File Server
-//! 
+//!
 #![feature(proc_macro_hygiene, decl_macro)]
 
 use rocket_contrib::helmet::SpaceHelmet;
@@ -18,11 +18,11 @@ extern crate log;
 
 use sxfs::args::Args;
 use sxfs::config::Config;
+use sxfs::routes;
 use sxfs::templates::{
     uploader::{ShortenerTemplate, UploaderTemplate},
     UpdatableTemplate,
 };
-use sxfs::routes;
 
 fn main() -> std::io::Result<()> {
     // Load args first
@@ -87,24 +87,37 @@ fn main() -> std::io::Result<()> {
     // Start web interface
     rocket::ignite()
         .register(catchers![
-            routes::internal_error,
-            routes::not_found,
-            routes::unauthorized,
+            routes::catcher::internal_error,
+            routes::catcher::not_found,
+            routes::catcher::unauthorized,
         ])
         .mount(
             "/",
             routes![
                 routes::index,
-                routes::login_form,
-                routes::login_submit,
-                routes::logout,
+                routes::auth::login_form,
+                routes::auth::login_submit,
+                routes::auth::logout,
                 routes::public_files,
-                routes::redirect_short_link,
-                routes::redirect_to_upload,
-                routes::shorten,
-                routes::upload,
                 routes::uploaders,
-                routes::view_upload,
+            ],
+        )
+        .mount(
+            "/u",
+            routes![
+                routes::upload::view,
+                routes::upload::all,
+                routes::upload::create,
+                routes::upload::delete,
+            ],
+        )
+        .mount(
+            "/;",
+            routes![
+                routes::link::follow,
+                routes::link::all,
+                routes::link::create,
+                routes::link::delete,
             ],
         )
         .manage(config)

@@ -1,4 +1,4 @@
-use crate::routes::rocket_uri_macro_login_form;
+use crate::routes::auth::rocket_uri_macro_login_form;
 use askama::rocket::Responder;
 use rocket::{http::uri::Origin, response::Redirect, Request};
 use std::marker::PhantomData;

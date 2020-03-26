@@ -9,11 +9,11 @@ extern crate rocket;
 extern crate log;
 
 pub mod args;
-pub mod responder;
-pub mod guard;
-pub mod routes;
 pub mod config;
 pub mod generate;
+pub mod guard;
 pub mod id;
+pub mod responder;
+pub mod routes;
 pub mod templates;
 pub mod user;

@@ -1,13 +1,6 @@
-use crate::guard::{auth::Auth, delete::Delete};
-use anyhow::anyhow;
-use rocket::{
-    http::{uri::Uri, ContentType, Cookie, Cookies, RawStr, Status},
-    request::Form,
-    response::{content::Content, Redirect},
-    Request, State,
-};
-use rust_embed::RustEmbed;
-use std::{fs, io::ErrorKind, path::PathBuf};
+use crate::guard::auth::Auth;
+
+use rocket::{Request, State};
 
 use crate::{
     config::Config,

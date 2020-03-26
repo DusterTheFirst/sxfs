@@ -1,7 +1,7 @@
 //! The rocket routes for interacting with the system
 
-use crate::guard::{auth::Auth};
-use anyhow::anyhow;
+use crate::guard::auth::Auth;
+
 use rocket::{
     http::{uri::Uri, ContentType, Cookie, Cookies, RawStr, Status},
     request::Form,
@@ -22,10 +22,10 @@ use crate::{
     user::User,
 };
 
+pub mod auth;
+pub mod catcher;
 pub mod link;
 pub mod upload;
-pub mod catcher;
-pub mod auth;
 
 /// The main page
 #[get("/")]

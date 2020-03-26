@@ -1,13 +1,4 @@
-use crate::guard::{auth::Auth, delete::Delete};
-use anyhow::anyhow;
-use rocket::{
-    http::{uri::Uri, ContentType, Cookie, Cookies, RawStr, Status},
-    request::Form,
-    response::{content::Content, Redirect},
-    Request, State,
-};
-use rust_embed::RustEmbed;
-use std::{fs, io::ErrorKind, path::PathBuf};
+use crate::guard::auth::Auth;
 
 use crate::{
     config::Config,
@@ -21,19 +12,19 @@ use crate::{
 };
 
 /// Endpoint to upload an asset
-#[post("/u")]
-pub fn create(auth: Auth) -> String {
+#[post("/")]
+pub fn create(_auth: Auth) -> String {
     unimplemented!();
 }
 
 /// Endpoint to view uploaded assets
-#[get("/u")]
-pub fn view_all(auth: Auth) -> String {
+#[get("/")]
+pub fn all(_auth: Auth) -> String {
     unimplemented!();
 }
 
 /// Endpoint to access an uploaded assest by its ID and filename
-#[get("/u/<id>/<filename>")]
+#[get("/<id>/<filename>")]
 pub fn view(id: ID, filename: Option<String>) -> String {
     dbg!(id);
     dbg!(filename);
@@ -41,7 +32,7 @@ pub fn view(id: ID, filename: Option<String>) -> String {
 }
 
 /// Endpoint to delete an uploaded assest by its ID and filename
-#[get("/u/d/<id>/<filename>")]
+#[get("/d/<id>/<filename>")]
 pub fn delete(id: ID, filename: Option<String>) -> String {
     dbg!(id);
     dbg!(filename);
