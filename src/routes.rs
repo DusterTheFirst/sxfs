@@ -1,19 +1,20 @@
 //! The rocket routes for interacting with the system
 
-use crate::auth::Auth;
+use crate::guard::{auth::Auth, delete::Delete};
+use anyhow::anyhow;
 use rocket::{
-    http::{ContentType, Cookie, Cookies, Status},
+    http::{uri::Uri, ContentType, Cookie, Cookies, RawStr, Status},
     request::Form,
     response::{content::Content, Redirect},
     Request, State,
 };
 use rust_embed::RustEmbed;
-use std::path::PathBuf;
-use url::Url;
+use std::{fs, io::ErrorKind, path::PathBuf};
 
 use crate::{
     config::Config,
     id::ID,
+    responder::dor::DOR,
     templates::{
         error::{InternalErrorTemplate, PageNotFoundTemplate, UnauthorizedTemplate},
         page::{IndexTemplate, LoginTemplate},
@@ -52,33 +53,31 @@ pub fn internal_error(req: &Request) -> InternalErrorTemplate {
 
 /// The main page
 #[get("/")]
-pub fn index(config: State<Config>, auth: Auth) -> IndexTemplate {
-    IndexTemplate {
-        site_name: config.name.clone(),
-        auth,
+pub fn index(config: State<Config>, auth: Option<Auth>) -> DOR<IndexTemplate> {
+    match auth {
+        None => DOR::login(),
+        Some(auth) => DOR::data(IndexTemplate {
+            site_name: config.name.clone(),
+            auth,
+        }),
     }
 }
 
-/// The redirection to the login form in the case that the user is not authenticated
-#[get("/", rank = 2)]
-pub fn index_redirect() -> Redirect {
-    Redirect::to(uri!(login_form))
-}
-
 /// The login form
-#[get("/login")]
-pub fn login_form(config: State<Config>) -> LoginTemplate {
+#[get("/login?<redirect>")]
+pub fn login_form(config: State<Config>, redirect: Option<String>) -> LoginTemplate {
     LoginTemplate {
         site_name: config.name.clone(),
+        redirect: redirect.unwrap_or_else(|| "/".into()),
     }
 }
 
 /// The logout flow
-#[get("/logout")]
-pub fn logout(mut cookies: Cookies) -> Redirect {
+#[get("/logout?<redirect>")]
+pub fn logout(mut cookies: Cookies, redirect: Option<String>) -> Redirect {
     cookies.remove(Cookie::named("auth"));
 
-    Redirect::to("/")
+    Redirect::to(redirect.unwrap_or_else(|| "/".into()))
 }
 
 /// The login submission portal
@@ -113,9 +112,20 @@ pub fn login_submit(mut cookies: Cookies, config: State<Config>, user: Form<User
 }
 
 /// The urls to download the uploader templates from
-#[get("/uploaders/<filename>")]
-pub fn uploaders(auth: Auth, filename: String) -> String {
-    unimplemented!();
+#[get("/sxcu/<filename>")]
+pub fn uploaders<'r>(
+    auth: Option<Auth>,
+    filename: String,
+) -> anyhow::Result<DOR<'r, Option<Content<String>>>> {
+    if let None = auth {
+        return Ok(DOR::login_and_return(uri!(uploaders: filename).path()));
+    }
+
+    match fs::read_to_string(format!("data/uploaders/{}", filename)) {
+        Err(e) if e.kind() == ErrorKind::NotFound => Ok(DOR::data(None)),
+        Err(e) => Err(e.into()),
+        Ok(s) => Ok(DOR::data(Some(Content(ContentType::JSON, s)))),
+    }
 }
 
 /// Endpoint to upload an asset
@@ -124,11 +134,23 @@ pub fn upload(auth: Auth) -> String {
     unimplemented!();
 }
 
+/// Endpoint to view uploaded assets
+#[get("/upload")]
+pub fn uploads(auth: Auth) -> String {
+    unimplemented!();
+}
+
 /// Endpoint to shorten a url
 #[post("/shorten?<url>")]
-pub fn shorten(auth: Auth, url: String) -> anyhow::Result<String> {
-    let url = Url::parse(&url)?;
+pub fn shorten(auth: Auth, url: &RawStr) -> anyhow::Result<String> {
+    let url = Uri::parse(url).map_err(|e| anyhow!(e.to_string()))?;
     dbg!(url);
+    unimplemented!();
+}
+
+/// Endpoint to view shortened url
+#[get("/shorten")]
+pub fn shortened(auth: Auth) -> anyhow::Result<String> {
     unimplemented!();
 }
 
@@ -141,7 +163,7 @@ pub fn redirect_to_upload(id: ID) -> Redirect {
 
 /// Endpoint to access an uploaded assest by its ID and filename
 #[get("/u/<id>/<filename>")]
-pub fn view_upload(id: ID, filename: String) -> String {
+pub fn delete_upload(id: ID, filename: Option<String>) -> String {
     dbg!(id);
     dbg!(filename);
     unimplemented!();

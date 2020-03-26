@@ -19,9 +19,20 @@ window.addEventListener("load", () => {
             body: `username=${encodeURIComponent(username.value)}&password=${encodeURIComponent(password.value)}`
         });
         if (response.status === 202) {
-            window.location = "/";
+            window.location = getParam("redirect") ?? "/";
         } else {
             alert("Invalid cred");
         }
     });
 });
+
+function getParams() {
+    return window.location.search.substr(1).split("&").map(x => x.split("=")).map(([key, value]) => ({ key, value: decodeURIComponent(value) }));
+}
+
+/**
+ * @param {string} key
+ */
+function getParam(key) {
+    return getParams().find(i => i.key === key)?.value;
+}

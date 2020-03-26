@@ -94,7 +94,6 @@ fn main() -> std::io::Result<()> {
         .mount(
             "/",
             routes![
-                routes::index_redirect,
                 routes::index,
                 routes::login_form,
                 routes::login_submit,

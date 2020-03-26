@@ -1,6 +1,6 @@
 //! Askama templates for user accessable pages
 
-use crate::auth::Auth;
+use crate::guard::auth::Auth;
 use askama::Template;
 
 /// The template for the login page
@@ -9,6 +9,8 @@ use askama::Template;
 pub struct LoginTemplate {
     /// The site name for customization
     pub site_name: String,
+    /// The url to redirect to after a successful login
+    pub redirect: String,
 }
 
 /// The template for the homepage
