@@ -1,0 +1,19 @@
+# The name for the site to override (ex. My Cool Files Site!!1!)
+name = "sxfs"
+
+# If the service is behind a reverse proxy or service that provides ssl
+https = true
+
+# The domain to use for viewing the uploaded files
+domain = "example.com"
+
+# A domain to use for uploads (ie. you need to bypass an upload limit by using direct IP) by default is set to domain
+# upload_domain = "upload.example.com"
+
+# The token to authenticate to upload files (Keep Safe!) (Change regularly)
+upload_token = "{{upload_token}}"
+
+# Users who have access to the web ui and uploads
+[users]
+# A sample user, please dear god replace this with your own username and password
+admin = "{{admin_password}}"

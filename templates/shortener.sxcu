@@ -1,0 +1,15 @@
+{
+    "Version": "13.0.0",
+    "Name": "{{name}} (URL shortener)",
+    "DestinationType": "URLShortener",
+    "RequestMethod": "POST",
+    "RequestURL": "{{proto}}://{{domain}}/shorten",
+    "Headers": {
+        "X-Upload-Token": "{{upload_token}}"
+    },
+    "Arguments": {
+        "url": "$input$"
+    },
+    "URL": "{{proto}}://{{domain}}/l/$json:id$",
+    "DeletionURL": "{{proto}}://{{domain}}/l/d/$json:id$"
+}

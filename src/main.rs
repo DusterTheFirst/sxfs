@@ -1,111 +1,126 @@
-#![feature(proc_macro_hygiene, decl_macro, type_alias_enum_variants)]
-#![warn(clippy::all)]
+//! ShareX File Server
+//! 
+#![feature(proc_macro_hygiene, decl_macro)]
 
-#[macro_use] extern crate rocket;
-#[macro_use] extern crate serde_json;
-#[macro_use] extern crate lazy_static;
-#[macro_use] extern crate rust_embed;
-#[macro_use] extern crate log;
-
-use std::path::{Path};
-use std::io::ErrorKind;
-use std::sync::Mutex;
-use std::fs;
-
-use handlebars::Handlebars;
+use rocket_contrib::helmet::SpaceHelmet;
+use simplelog::{
+    CombinedLogger, ConfigBuilder as LogConfigBuilder, LevelFilter, SharedLogger, SimpleLogger,
+    TermLogger, TerminalMode,
+};
+use structopt::StructOpt;
 
 use colored::*;
 
-mod gaurds;
-mod paths;
-mod templates;
-mod config;
-mod logger;
+#[macro_use]
+extern crate rocket;
+#[macro_use]
+extern crate log;
 
-use config::{Config, ConfigError};
-
-lazy_static! {
-    pub static ref HBS: Mutex<Handlebars> = Mutex::new(Handlebars::new());
-}
-
-fn load_config(config_path: &Path) -> Config {
-    match Config::load(config_path) {
-        Err(er) => {
-            // Send error
-            match er {
-                ConfigError::Create(e) => error!(target: "config", "{} {:?}", "Error creating config file:".red(), e),
-                ConfigError::Parse(e) => error!(target: "config", "{}\n{:#?}", "Error parsing config:".red(), e),
-                ConfigError::Read(e) => error!(target: "config", "{} {:?}", "Error reading config file:".red(), e),
-                ConfigError::Write(e) => error!(target: "config", "{} {:?}", "Error writing to config file:".red(), e),
-            };
-            // Panic
-            panic!("Failed setting up config")
-        },
-        Ok(config) => {
-            debug!(target: "config", "Loaded Config: {:#?}", config);
-            config
-        }
-    }
-}
+use sxfs::args::Args;
+use sxfs::config::Config;
+use sxfs::templates::{
+    uploader::{ShortenerTemplate, UploaderTemplate},
+    UpdatableTemplate,
+};
+use sxfs::routes;
 
 fn main() -> std::io::Result<()> {
-    // Init logger
-    logger::init(log::LevelFilter::Trace).expect("Failed to initialize logger");
-    
-    error!("1");
-    warn!("2");
-    info!("3");
-    debug!("4");
-    trace!("5");
+    // Load args first
+    let args: Args = Args::from_args();
 
-    trace!("{} {}", "Running SXFS from".green(), std::env::current_dir().unwrap().to_string_lossy().blue());
+    // Init logger
+    CombinedLogger::init(vec![
+        create_logger(
+            "sxfs",
+            if args.trace {
+                LevelFilter::Trace
+            } else if args.debug {
+                LevelFilter::Debug
+            } else if args.info {
+                LevelFilter::Info
+            } else {
+                LevelFilter::Warn
+            },
+        ),
+        create_logger(
+            "rocket",
+            if args.info {
+                LevelFilter::Info
+            } else {
+                LevelFilter::Warn
+            },
+        ),
+    ])
+    .ok();
 
     // Load config
-    debug!(target: "config", "{}", "Loading Config...".yellow());
-    let config_path = Path::new("Config.toml");
-    let config: Config = load_config(config_path);
+    debug!("{}", "Loading Config...".yellow());
+    let config: Config = match Config::load(&args.config) {
+        Err(er) => {
+            // Send error
+            error!("{} {}", "Failed to process config file:".red(), er);
+            // Panic
+            panic!("{:?}", er);
+        }
+        Ok(config) => {
+            debug!("Loaded Config: {:#?}", config);
+            config
+        }
+    };
 
-    match fs::create_dir(&config.uploads_dir) {
-        Ok(_) => info!("{} {}", "Created upload directory".yellow(), (&config.uploads_dir).to_string_lossy().blue()),
-        Err(e) => match e.kind() {
-            ErrorKind::AlreadyExists => debug!("{} {}", "Found upload directory".green(), (&config.uploads_dir).to_string_lossy().blue()),
-            _ => return Err(e)
+    // Write out uploaders
+    match UploaderTemplate::new(&config).update(&args.uploader) {
+        Ok(()) => {}
+        Err(e) => {
+            error!("{} {}", "Failed to write uploader template:".red(), e);
+            panic!("{:?}", e);
+        }
+    }
+    match ShortenerTemplate::new(&config).update(&args.shortener) {
+        Ok(()) => {}
+        Err(e) => {
+            error!("{} {}", "Failed to write shortener template:".red(), e);
+            panic!("{:?}", e);
         }
     }
 
-    // TODO: User defined templates
-    // Regester templates
-    HBS.lock().unwrap().set_strict_mode(true);
-    debug!(target: "handlebars", "{}", "Loading templates...".yellow());
-    for (template_file, error) in templates::load_templates() {
-        match error {
-            None => trace!("{} - {}", template_file.blue(), "OK".green()),
-            Some(reason) => {
-                error!("{} - {}", template_file.blue(), "FAIL".red());
-                trace!("{}", reason);
-            }
-        }
-    };
-    debug!(target: "handlebars", "{}", "Loading partials...".yellow());
-    for (partial_file, error) in templates::load_partials() {
-        match error {
-            None => trace!("{} - {}", partial_file.blue(), "OK".green()),
-            Some(reason) => {
-                error!("{} - {}", partial_file.blue(), "FAIL".red());
-                trace!("{}", reason);
-            }
-        }
-    };
-
-    rocket::ignite().register(catchers![
-        paths::not_found,
-        paths::unauthorized
-    ]).mount("/", routes![
-        paths::index,
-        paths::view_upload,
-        paths::redirect_short_url,
-        paths::make_upload
-    ]).launch();
+    // Start web interface
+    rocket::ignite()
+        .register(catchers![
+            routes::internal_error,
+            routes::not_found,
+            routes::unauthorized,
+        ])
+        .mount(
+            "/",
+            routes![
+                routes::index_redirect,
+                routes::index,
+                routes::login_form,
+                routes::login_submit,
+                routes::logout,
+                routes::public_files,
+                routes::redirect_short_link,
+                routes::redirect_to_upload,
+                routes::shorten,
+                routes::upload,
+                routes::uploaders,
+                routes::view_upload,
+            ],
+        )
+        .manage(config)
+        .attach(SpaceHelmet::default())
+        .launch();
 
     Ok(())
+}
+
+/// Create a configured logger with the specified settings
+fn create_logger(filter: &'static str, level: LevelFilter) -> Box<dyn SharedLogger> {
+    let config = LogConfigBuilder::new().add_filter_allow_str(filter).build();
+
+    match TermLogger::new(level, config.clone(), TerminalMode::Mixed) {
+        None => SimpleLogger::new(level, config),
+        Some(log) => log,
+    }
 }

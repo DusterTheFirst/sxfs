@@ -3,5 +3,5 @@
 **/*.rs.bk
 
 # Program files
-/uploads
-config.toml
+/data
+!.gitkeep
