@@ -1,28 +1,31 @@
-use rocket::{
-    http::{uri::Uri, ContentType, Cookie, Cookies, RawStr, Status},
-    request::Form,
-    response::{content::Content, Redirect},
-    Request, State,
-};
-use rust_embed::RustEmbed;
+//! Routes for handling authentication
 
 use crate::{
-    config::Config,
-    id::ID,
-    responder::dor::DOR,
-    templates::{
-        error::{InternalErrorTemplate, PageNotFoundTemplate, UnauthorizedTemplate},
-        page::{IndexTemplate, LoginTemplate},
-    },
-    user::User,
+    config::Config, guard::auth::Auth, responder::dor::DOR, routes::rocket_uri_macro_index,
+    templates::page::LoginTemplate, user::User,
 };
+use rocket::{
+    http::{uri::Uri, Cookie, Cookies, Status},
+    request::Form,
+    response::Redirect,
+    State,
+};
+use std::convert::TryInto;
 
 /// The login form
 #[get("/login?<redirect>")]
-pub fn login_form(config: State<Config>, redirect: Option<String>) -> LoginTemplate {
-    LoginTemplate {
-        site_name: config.name.clone(),
-        redirect: redirect.unwrap_or_else(|| "/".into()),
+pub fn login_form(
+    auth: Option<Auth>,
+    config: State<Config>,
+    redirect: Option<String>,
+) -> DOR<LoginTemplate> {
+    let redirect = redirect.unwrap_or_else(|| "/".into());
+    match auth {
+        Some(_) => DOR::redirect::<Uri<'static>>(redirect.try_into().unwrap_or(uri!(index).into())),
+        None => DOR::data(LoginTemplate {
+            site_name: config.name.clone(),
+            redirect,
+        }),
     }
 }
 

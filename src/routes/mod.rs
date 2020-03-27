@@ -2,25 +2,10 @@
 
 use crate::guard::auth::Auth;
 
-use rocket::{
-    http::{uri::Uri, ContentType, Cookie, Cookies, RawStr, Status},
-    request::Form,
-    response::{content::Content, Redirect},
-    Request, State,
-};
+use crate::{config::Config, responder::dor::DOR, templates::page::IndexTemplate};
+use rocket::{http::ContentType, response::content::Content, State};
 use rust_embed::RustEmbed;
 use std::{fs, io::ErrorKind, path::PathBuf};
-
-use crate::{
-    config::Config,
-    id::ID,
-    responder::dor::DOR,
-    templates::{
-        error::{InternalErrorTemplate, PageNotFoundTemplate, UnauthorizedTemplate},
-        page::{IndexTemplate, LoginTemplate},
-    },
-    user::User,
-};
 
 pub mod auth;
 pub mod catcher;
@@ -44,9 +29,9 @@ pub fn index(config: State<Config>, auth: Option<Auth>) -> DOR<IndexTemplate> {
 pub fn uploaders<'r>(
     auth: Option<Auth>,
     filename: String,
-) -> anyhow::Result<DOR<'r, Option<Content<String>>>> {
+) -> anyhow::Result<DOR<'static, Option<Content<String>>>> {
     if let None = auth {
-        return Ok(DOR::login_and_return(uri!(uploaders: filename).path()));
+        return Ok(DOR::login_and_return(uri!(uploaders: filename)));
     }
 
     match fs::read_to_string(format!("data/uploaders/{}", filename)) {

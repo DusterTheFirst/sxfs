@@ -1,17 +1,11 @@
-use crate::guard::auth::Auth;
-
-use rocket::{Request, State};
+//! Catchers for errors caused by other routes
 
 use crate::{
     config::Config,
-    id::ID,
-    responder::dor::DOR,
-    templates::{
-        error::{InternalErrorTemplate, PageNotFoundTemplate, UnauthorizedTemplate},
-        page::{IndexTemplate, LoginTemplate},
-    },
-    user::User,
+    guard::auth::Auth,
+    templates::error::{InternalErrorTemplate, PageNotFoundTemplate, UnauthorizedTemplate},
 };
+use rocket::{Request, State};
 
 /// Catcher for when a page is not found and throws a 404
 #[catch(404)]

@@ -16,6 +16,7 @@ extern crate rocket;
 #[macro_use]
 extern crate log;
 
+use rocket::{fairing::AdHoc, http::Header};
 use sxfs::args::Args;
 use sxfs::config::Config;
 use sxfs::routes;
@@ -52,6 +53,8 @@ fn main() -> std::io::Result<()> {
         ),
     ])
     .ok();
+
+    // FIXME: CREATE DATA DIR
 
     // Load config
     debug!("{}", "Loading Config...".yellow());
@@ -94,34 +97,30 @@ fn main() -> std::io::Result<()> {
         .mount(
             "/",
             routes![
-                routes::index,
                 routes::auth::login_form,
                 routes::auth::login_submit,
                 routes::auth::logout,
-                routes::public_files,
-                routes::uploaders,
-            ],
-        )
-        .mount(
-            "/u",
-            routes![
-                routes::upload::view,
-                routes::upload::all,
-                routes::upload::create,
-                routes::upload::delete,
-            ],
-        )
-        .mount(
-            "/;",
-            routes![
-                routes::link::follow,
+                routes::index,
                 routes::link::all,
                 routes::link::create,
                 routes::link::delete,
+                routes::link::follow,
+                routes::public_files,
+                routes::upload::all,
+                routes::upload::create,
+                routes::upload::delete,
+                routes::upload::view,
+                routes::uploaders,
             ],
         )
         .manage(config)
         .attach(SpaceHelmet::default())
+        .attach(AdHoc::on_response("No-Cache", |_, res| {
+            res.set_header(Header::new(
+                "Cache-Control",
+                "no-store, no-cache, must-revalidate, max-age=0",
+            ));
+        }))
         .launch();
 
     Ok(())
