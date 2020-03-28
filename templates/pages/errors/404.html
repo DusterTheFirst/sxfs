@@ -1,17 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <title>404 - Not Found</title>
-    </head>
-    <body>
-        <div style="text-align: center;">
-            <h1>404 - Not Found</h1>
-            <p>"{{uri}}" is not a valid path.</p>
-            <hr>
-            <sub>{{site_name}}</sub>
-        </div>
-    </body>
-</html>
+{% extends "../base/error.html" %}
+
+{%- block vars -%}
+    {%- let error_id = 404 -%}
+    {%- let error_name = "Not Found" -%}
+{%- endblock -%}
+
+{%- block content -%}
+    <p>"{{uri}}" is not a valid path.</p>
+{%- endblock -%}

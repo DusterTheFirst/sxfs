@@ -1,22 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{{site_name}} - Login</title>
-        <script src="/login.js" defer async></script>
-    </head>
-    <body>
-        <form id="form">
-            <label>
-                Username
-                <input type="text" name="username" />
-            </label>
-            <label>
-                Password
-                <input type="password" name="password" />
-            </label>
-            <input type="submit" />
-        </form>
-    </body>
-</html>
+{% extends "base/page.html" %}
+
+{% block page %}Login{% endblock %}
+
+{% block vars %}
+    {% let show_header = false %}
+{% endblock %}
+
+{% block head %}
+    <script src="/login.js" defer async></script>
+{% endblock %}
+
+{% block body %}
+    <form id="form">
+        <label>
+            Username
+            <input type="text" name="username" />
+        </label>
+        <label>
+            Password
+            <input type="password" name="password" />
+        </label>
+        <input type="submit" />
+    </form>
+{% endblock %}

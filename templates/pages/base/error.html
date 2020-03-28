@@ -1,0 +1,27 @@
+{#- Setup variables for use -#}
+{%- let error_id -%}
+{%- let error_name -%}
+{#- Allow for override of initialization -#}
+{%- block vars -%}
+    {%- let error_id = 0 -%}
+    {%- let error_name = "Unknown Error" -%}
+{%- endblock -%}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ site_name }} - {{error_id}} - {{error_name}}</title>
+    </head>
+    <body>
+        <div style="text-align: center;">
+            <h1>{{error_id}} - {{error_name}}</h1>
+            <div>
+                {% block content %}{% endblock %}
+            </div>
+            <hr>
+            <sub>{{site_name}}</sub>
+        </div>
+    </body>
+</html>

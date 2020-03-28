@@ -1,0 +1,22 @@
+{#- Setup variables for use -#}
+{%- let show_header -%}
+{#- Allow for override of initialization -#}
+{%- block vars -%}
+    {%- let show_header = true -%}
+{%- endblock -%}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ site_name }} - {% block page %}{% endblock %}</title>
+        {%- block head -%}{%- endblock -%}
+    </head>
+    <body>
+        {%- if show_header -%}
+            {%- include "pages/partials/header.html" -%}
+        {%- endif -%}
+        {%- block body -%}{%- endblock -%}
+    </body>
+</html>

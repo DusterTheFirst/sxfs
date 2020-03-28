@@ -1,21 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{{site_name}} - Homepage</title>
-    </head>
-    <body>
-        <a href="/logout">Logout</a>
-        {%- match auth -%}
-            {%- when Auth::User with (user) -%}
-                <h1>Authenticated with user <pre>{{user.username}}</pre> and password <pre>{{user.password}}</pre></h1>
-            {%- when Auth::UploadToken with (token) -%}
-                <h1>Authenticated with an upload token <pre>{{token}}</pre></h1>
-        {%- endmatch -%}
-        <a href="/sxcu/uploader.sxcu" download>Download the uploader file</a>
-        <a href="/sxcu/shortener.sxcu" download>Download the shortener file</a>
-        <a href="/u">Uploads</a>
-        <a href="/l">Shortened URLs</a>
-    </body>
-</html>
+{% extends "base/page.html" %}
+
+{% block page %}Homepage{% endblock %}
+
+{% block body %}
+    {%- match auth -%}
+        {%- when Auth::User with (user) -%}
+        <h1>Authenticated with user
+            <pre>{{user.username}}</pre> and password
+            <pre>{{user.password}}</pre>
+        </h1>
+        {%- when Auth::UploadToken with (token) -%}
+        <h1>Authenticated with an upload token
+            <pre>{{token}}</pre>
+        </h1>
+    {%- endmatch -%}
+{% endblock %}

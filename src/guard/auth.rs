@@ -9,6 +9,7 @@ use rocket::{
 use std::convert::TryInto;
 
 /// A method of authentication
+#[derive(Debug)]
 pub enum Auth {
     /// A user account used for authentication
     User(User),
