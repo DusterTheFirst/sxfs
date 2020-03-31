@@ -3,7 +3,11 @@
 use crate::guard::auth::Auth;
 
 use crate::{config::Config, responder::dor::DOR, templates::page::IndexTemplate};
-use rocket::{http::ContentType, response::content::Content, State};
+use rocket::{
+    http::{ContentType, Status},
+    response::content::Content,
+    State,
+};
 use rust_embed::RustEmbed;
 use std::{fs, io::ErrorKind, path::PathBuf};
 
@@ -29,15 +33,19 @@ pub fn index(config: State<Config>, auth: Option<Auth>) -> DOR<IndexTemplate> {
 pub fn uploaders<'r>(
     auth: Option<Auth>,
     filename: String,
-) -> anyhow::Result<DOR<'static, Option<Content<String>>>> {
+) -> Result<DOR<'static, Content<String>>, Status> {
     if let None = auth {
         return Ok(DOR::login_and_return(uri!(uploaders: filename)));
     }
 
     match fs::read_to_string(format!("data/uploaders/{}", filename)) {
-        Err(e) if e.kind() == ErrorKind::NotFound => Ok(DOR::data(None)),
-        Err(e) => Err(e.into()),
-        Ok(s) => Ok(DOR::data(Some(Content(ContentType::JSON, s)))),
+        Err(e) if e.kind() == ErrorKind::NotFound => Err(Status::NotFound),
+        Err(e) => {
+            error!("Error reading uploader file {} {}", filename, e);
+
+            Err(Status::InternalServerError)
+        }
+        Ok(s) => Ok(DOR::data(Content(ContentType::JSON, s))),
     }
 }
 

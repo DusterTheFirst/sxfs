@@ -1,31 +1,38 @@
 //! ShareX File Server
-//!
 #![feature(proc_macro_hygiene, decl_macro)]
 
+use colored::*;
+use io::{Error, ErrorKind};
+use rocket::{
+    config::{Environment, Value},
+    fairing::AdHoc,
+    http::Header,
+};
 use rocket_contrib::helmet::SpaceHelmet;
 use simplelog::{
     CombinedLogger, ConfigBuilder as LogConfigBuilder, LevelFilter, SharedLogger, SimpleLogger,
     TermLogger, TerminalMode,
 };
+use std::{collections::HashMap, io};
 use structopt::StructOpt;
-
-use colored::*;
+use sxfs::args::Args;
+use sxfs::config::Config;
+use sxfs::routes;
+use sxfs::{
+    create_parent_directories,
+    database::Database,
+    templates::{
+        uploader::{ShortenerTemplate, UploaderTemplate},
+        UpdatableTemplate,
+    },
+};
 
 #[macro_use]
 extern crate rocket;
 #[macro_use]
 extern crate log;
 
-use rocket::{fairing::AdHoc, http::Header};
-use sxfs::args::Args;
-use sxfs::config::Config;
-use sxfs::routes;
-use sxfs::templates::{
-    uploader::{ShortenerTemplate, UploaderTemplate},
-    UpdatableTemplate,
-};
-
-fn main() -> std::io::Result<()> {
+fn main() -> io::Result<()> {
     // Load args first
     let args: Args = Args::from_args();
 
@@ -33,19 +40,17 @@ fn main() -> std::io::Result<()> {
     CombinedLogger::init(vec![
         create_logger(
             "sxfs",
-            if args.trace {
-                LevelFilter::Trace
-            } else if args.debug {
-                LevelFilter::Debug
-            } else if args.info {
-                LevelFilter::Info
-            } else {
-                LevelFilter::Warn
+            match args.verbose {
+                0 => LevelFilter::Warn,
+                1 => LevelFilter::Info,
+                2 => LevelFilter::Debug,
+                3 => LevelFilter::Trace,
+                _ => LevelFilter::Off,
             },
         ),
         create_logger(
             "rocket",
-            if args.info {
+            if args.rocket_log {
                 LevelFilter::Info
             } else {
                 LevelFilter::Warn
@@ -53,8 +58,6 @@ fn main() -> std::io::Result<()> {
         ),
     ])
     .ok();
-
-    // FIXME: CREATE DATA DIR
 
     // Load config
     debug!("{}", "Loading Config...".yellow());
@@ -72,14 +75,14 @@ fn main() -> std::io::Result<()> {
     };
 
     // Write out uploaders
-    match UploaderTemplate::new(&config).update(&args.uploader) {
+    match UploaderTemplate::new(&config).update(&args.uploaders.join("uploader.sxcu")) {
         Ok(()) => {}
         Err(e) => {
             error!("{} {}", "Failed to write uploader template:".red(), e);
             panic!("{:?}", e);
         }
     }
-    match ShortenerTemplate::new(&config).update(&args.shortener) {
+    match ShortenerTemplate::new(&config).update(&args.uploaders.join("shortener.sxcu")) {
         Ok(()) => {}
         Err(e) => {
             error!("{} {}", "Failed to write shortener template:".red(), e);
@@ -87,8 +90,28 @@ fn main() -> std::io::Result<()> {
         }
     }
 
+    // Create parent directories for database
+    create_parent_directories(&args.database)?;
+
+    // Configure contrib database for rocket
+    let mut database_config = HashMap::new();
+    let mut databases = HashMap::new();
+
+    database_config.insert("url", Value::from(args.database.to_string_lossy().as_ref()));
+    databases.insert("db", Value::from(database_config));
+
+    // Configure web interface
+    let rocket_config = rocket::Config::build(
+        Environment::active().map_err(|e| Error::new(ErrorKind::InvalidInput, e))?,
+    )
+    .address(args.address.to_string())
+    .port(args.port)
+    .extra("databases", databases)
+    .finalize()
+    .map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
+
     // Start web interface
-    rocket::ignite()
+    rocket::custom(rocket_config)
         .register(catchers![
             routes::catcher::internal_error,
             routes::catcher::not_found,
@@ -123,6 +146,7 @@ fn main() -> std::io::Result<()> {
                 "no-store, no-cache, must-revalidate, max-age=0",
             ));
         }))
+        .attach(Database::fairing())
         .launch();
 
     Ok(())

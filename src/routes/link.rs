@@ -1,13 +1,12 @@
 //! Routes for handling shortened links
 
 use crate::{guard::auth::Auth, id::ID, responder::dor::DOR};
-use anyhow::anyhow;
-use rocket::http::{uri::Uri, RawStr};
+use rocket::http::{uri::{self, Uri}, RawStr};
 
 /// Endpoint to shorten a url
 #[post("/l?<url>")]
-pub fn create(_auth: Auth, url: &RawStr) -> anyhow::Result<String> {
-    let url = Uri::parse(url).map_err(|e| anyhow!(e.to_string()))?;
+pub fn create(_auth: Auth, url: &RawStr) -> Result<String, uri::Error> {
+    let url = Uri::parse(url)?;
     dbg!(url);
     todo!();
 }

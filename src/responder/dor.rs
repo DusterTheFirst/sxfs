@@ -1,8 +1,11 @@
 //! A responder that can contain data or a redirect
 
 use crate::routes::auth::rocket_uri_macro_login_form;
-use askama::rocket::Responder;
-use rocket::{http::uri::Uri, response::Redirect, Request};
+use rocket::{
+    http::uri::Uri,
+    response::{self, Redirect, Responder},
+    Request,
+};
 use std::marker::PhantomData;
 
 /// A response that can contain either data or a redirect
@@ -14,7 +17,7 @@ pub enum DataOrRedirect<'r, T: Responder<'r>> {
 }
 
 impl<'r, T: Responder<'r>> Responder<'r> for DataOrRedirect<'r, T> {
-    fn respond_to(self, request: &Request) -> askama::rocket::Result<'r> {
+    fn respond_to(self, request: &Request) -> response::Result<'r> {
         match self {
             Self::Data(d, _) => d.respond_to(request),
             Self::Redirect(r) => r.respond_to(request),

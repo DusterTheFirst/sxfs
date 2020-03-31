@@ -2,7 +2,7 @@
 name = "sxfs"
 
 # If the service is behind a reverse proxy or service that provides ssl
-https = true
+https = false
 
 # The domain to use for viewing the uploaded files
 domain = "example.com"

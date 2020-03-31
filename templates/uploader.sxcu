@@ -4,7 +4,10 @@
     "DestinationType": "ImageUploader, TextUploader, FileUploader",
     "RequestMethod": "POST",
     "RequestURL": "{{proto}}://{{upload_domain}}/u",
-    "Body": "MultipartFormData",
+    "Body": "Binary",
+    "Parameters": {
+        "filename": "$filename$"
+    },
     "Headers": {
         "X-Upload-Token": "{{upload_token}}"
     },

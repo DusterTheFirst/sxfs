@@ -1,12 +1,13 @@
 //! The app wide configuration and tools to assist with manipulating it
 
 use crate::generate::generate_base64;
-use crate::templates::ConfigTemplate;
+use crate::{create_parent_directories, templates::ConfigTemplate};
 use askama::Template;
+use io::ErrorKind;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::{io, path::Path};
 
 #[derive(Deserialize, Debug)]
 /// The configuration for the app
@@ -36,9 +37,12 @@ impl Config {
     /// # Errors
     /// - If there is a problem reading the file
     /// - If there is a problem parsing the file
-    pub fn load(path: &Path) -> anyhow::Result<Config> {
+    pub fn load(path: &Path) -> io::Result<Config> {
         // Check if path exixts
         if !path.exists() {
+            // Create the parent directories if they do not already exist
+            create_parent_directories(&path)?;
+
             debug!("Creating config file {:?} from template", path);
             // Write template if file does not exist
             fs::write(
@@ -47,7 +51,8 @@ impl Config {
                     upload_token: &generate_base64(100),
                     admin_password: &generate_base64(25),
                 }
-                .render()?,
+                .render()
+                .map_err(|e| io::Error::new(ErrorKind::InvalidData, e))?,
             )?;
         }
 
