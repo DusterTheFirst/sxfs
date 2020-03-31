@@ -7,8 +7,8 @@
     "Headers": {
         "X-Upload-Token": "{{upload_token}}"
     },
-    "Arguments": {
-        "url": "$input$"
+    "Parameters": {
+        "uri": "$input$"
     },
     "URL": "{{proto}}://{{domain}}/l/$json:id$",
     "DeletionURL": "{{proto}}://{{domain}}/l/d/$json:id$"

@@ -1,35 +1,131 @@
 //! Routes for handling shortened links
 
-use crate::{guard::auth::Auth, id::ID, responder::dor::DOR};
-use rocket::http::{uri::{self, Uri}, RawStr};
+use crate::{
+    database::{Database, Link},
+    guard::auth::Auth,
+    id::ID,
+    responder::dor::DOR,
+};
+use chrono::Local;
+use rocket::{
+    http::{uri::Uri, Status},
+    response::Redirect,
+};
+use rocket_contrib::json::Json;
+use serde::Serialize;
+
+/// The responded result to a successful link shorten
+#[derive(Serialize)]
+pub struct LinkResult {
+    id: ID,
+}
 
 /// Endpoint to shorten a url
-#[post("/l?<url>")]
-pub fn create(_auth: Auth, url: &RawStr) -> Result<String, uri::Error> {
-    let url = Uri::parse(url)?;
-    dbg!(url);
-    todo!();
+#[post("/l?<uri>")]
+pub fn create(_auth: Auth, database: Database, uri: String) -> Result<Json<LinkResult>, Status> {
+    match Uri::parse(&uri) {
+        Ok(_) => {
+            let link = Link {
+                id: ID::new(),
+                uri,
+                timestamp: Local::now().naive_local(),
+            };
+
+            database.links().save_link(&link).map_err(|e| {
+                error!(
+                    "Error saving link: ID: {} Uri: {} Error: {}",
+                    link.id, link.uri, e
+                );
+
+                Status::InternalServerError
+            })?;
+
+            Ok(Json(LinkResult { id: link.id }))
+        }
+        Err(e) => {
+            warn!("Attempted to shorten invalid uri: {}", e);
+
+            Err(Status::BadRequest)
+        }
+    }
 }
 
 /// Endpoint to view shortened urls
 #[get("/l")]
-pub fn all<'a>(auth: Option<Auth>) -> DOR<'a, String> {
-    match auth {
-        Some(auth) => todo!(),
+pub fn all<'a>(auth: Option<Auth>, database: Database) -> Result<DOR<'a, String>, Status> {
+    Ok(match auth {
+        Some(_) => {
+            let table = database.links();
+            let links = table.get_all_links().map_err(|e| {
+                error!("Error indexing links: {}", e);
+
+                Status::InternalServerError
+            })?;
+            DOR::data(
+                links
+                    .into_iter()
+                    .map(|(link, hits)| {
+                        format!(
+                            "ID: {}, Uri: {}, Timestamp: {}, Hits: {}\n",
+                            link.id, link.uri, link.timestamp, hits
+                        )
+                    })
+                    .collect(),
+            )
+        }
         None => DOR::login_and_return(uri!(all)),
-    }
+    })
 }
 
 /// Endpoint to use a shortened link
 #[get("/l/<id>")]
-pub fn follow(id: ID) -> String {
-    dbg!(id);
-    todo!();
+pub fn follow(database: Database, id: ID) -> Result<Redirect, Status> {
+    let links = database.links();
+    match links.get_link(&id) {
+        Err(rusqlite::Error::QueryReturnedNoRows) => Err(Status::NotFound),
+        Err(e) => {
+            error!("Error fetching file metadata: ID: {} Error: {}", id, e);
+
+            Err(Status::InternalServerError)
+        }
+        Ok(link) => {
+            links.hit(&id).map_err(|e| {
+                error!("Error incrementing hits on link: ID: {} Error: {}", id, e);
+
+                Status::InternalServerError
+            })?;
+            Ok(Redirect::to(link.uri))
+        }
+    }
 }
 
 /// Endpoint to delete a shortened link
 #[get("/l/d/<id>")]
-pub fn delete(id: ID) -> String {
-    dbg!(id);
-    todo!();
+pub fn delete(
+    database: Database,
+    auth: Option<Auth>,
+    id: ID,
+) -> Result<DOR<'static, String>, Status> {
+    match auth {
+        Some(_) => match database.links().get_link(&id) {
+            Err(rusqlite::Error::QueryReturnedNoRows) => Err(Status::NotFound),
+            Err(e) => {
+                error!("Error fetching file link: ID: {} Error: {}", id, e);
+
+                Err(Status::InternalServerError)
+            }
+            Ok(link) => match database.uploads().delete_upload(&id) {
+                Err(e) => {
+                    error!(
+                        "Error deleting link: ID: {} Uri: {} Error: {}",
+                        id, link.uri, e
+                    );
+
+                    Err(Status::InternalServerError)
+                }
+                Ok(()) => Ok(DOR::data("Successfully deleted".into())),
+            },
+        },
+        None => Ok(DOR::login_and_return(uri!(delete: id))),
+    }
 }

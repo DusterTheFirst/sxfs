@@ -3,7 +3,7 @@
 use std::{net::IpAddr, path::PathBuf};
 use structopt::StructOpt;
 
-/// The command line arguments passed to sxfs
+/// A file server for handling uploads from the ShareX client
 #[derive(StructOpt, Debug)]
 #[structopt(name = "sxfs")]
 pub struct Args {

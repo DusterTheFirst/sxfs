@@ -39,8 +39,6 @@ pub fn create<'r>(
     // Get the upload size from the
     let upload_size = upload_size.map_or(0, |u| *u);
 
-    info!("New Upload: {:?} {} {}", filename, id, upload_size);
-
     // Stream the data into a vec that should be preallocated with the correct size
     let mut data = Vec::with_capacity(upload_size);
     upload.stream_to(&mut data).map_err(|e| {
@@ -49,16 +47,9 @@ pub fn create<'r>(
         Status::InternalServerError
     })?;
 
-    info!(
-        "New Upload: {} {} {}",
-        data.len(),
-        upload_size,
-        data.len() == upload_size
-    );
-
     let upload = UploadMetadata {
         id,
-        filename,
+        filename, // TODO: CATCHER
         size: data.len().try_into().map_err(|_| Status::PayloadTooLarge)?,
         timestamp: Local::now().naive_local(),
     };
@@ -87,7 +78,7 @@ pub fn create<'r>(
 #[get("/u")]
 pub fn all(auth: Option<Auth>, database: Database) -> Result<DOR<'static, String>, Status> {
     Ok(match auth {
-        Some(auth) => DOR::data(
+        Some(_) => DOR::data(
             database
                 .uploads()
                 .get_all_uploads()
@@ -99,12 +90,11 @@ pub fn all(auth: Option<Auth>, database: Database) -> Result<DOR<'static, String
                 .into_iter()
                 .map(|x| {
                     format!(
-                        "ID: {}, Filename: {}, Timestamp: {}, Filesize {}",
+                        "ID: {}, Filename: {}, Timestamp: {}, Filesize {}\n",
                         x.id, x.filename, x.timestamp, x.size
                     )
                 })
-                .collect::<Box<_>>()
-                .join("\n"),
+                .collect(),
         ),
         None => DOR::login_and_return(uri!(all)),
     })
@@ -114,6 +104,7 @@ pub fn all(auth: Option<Auth>, database: Database) -> Result<DOR<'static, String
 #[get("/u/<id>")]
 pub fn view_by_id(database: Database, id: ID) -> Result<Redirect, Status> {
     match database.uploads().get_upload_metatdata(&id) {
+        Err(rusqlite::Error::QueryReturnedNoRows) => Err(Status::NotFound),
         Err(e) => {
             error!("Error fetching file metadata: ID: {} Error: {}", id, e);
 
@@ -127,6 +118,7 @@ pub fn view_by_id(database: Database, id: ID) -> Result<Redirect, Status> {
 #[get("/u/<id>/<filename>")]
 pub fn view<'r>(database: Database, id: ID, filename: String) -> Result<Content<Vec<u8>>, Status> {
     match database.uploads().get_upload_metatdata(&id) {
+        Err(rusqlite::Error::QueryReturnedNoRows) => Err(Status::NotFound),
         Err(e) => {
             error!("Error fetching file metadata: ID: {} Error: {}", id, e);
 
@@ -160,21 +152,52 @@ pub fn view<'r>(database: Database, id: ID, filename: String) -> Result<Content<
 
 /// Endpoint to delete an uploaded assest by its ID
 #[get("/u/d/<id>", rank = 2)]
-pub fn delete_by_id(id: ID) -> Redirect {
-    dbg!(id);
-    todo!();
+pub fn delete_by_id(database: Database, id: ID) -> Result<Redirect, Status> {
+    match database.uploads().get_upload_metatdata(&id) {
+        Err(rusqlite::Error::QueryReturnedNoRows) => Err(Status::NotFound),
+        Err(e) => {
+            error!("Error fetching file metadata: ID: {} Error: {}", id, e);
+
+            Err(Status::InternalServerError)
+        }
+        Ok(meta) => Ok(Redirect::to(uri!(delete: &id, meta.filename))),
+    }
 }
 
 /// Endpoint to delete an uploaded assest by its ID and filename
 #[get("/u/d/<id>/<filename>")]
-pub fn delete(auth: Option<Auth>, id: ID, filename: String) -> DOR<'static, String> {
+pub fn delete(
+    database: Database,
+    auth: Option<Auth>,
+    id: ID,
+    filename: String,
+) -> Result<DOR<'static, String>, Status> {
     match auth {
-        Some(auth) => {
-            dbg!(id);
-            dbg!(filename);
-            dbg!(auth);
-            todo!()
-        }
-        None => DOR::login_and_return(uri!(delete: id, filename)),
+        Some(_) => match database.uploads().get_upload_metatdata(&id) {
+            Err(rusqlite::Error::QueryReturnedNoRows) => Err(Status::NotFound),
+            Err(e) => {
+                error!("Error fetching file metadata: ID: {} Error: {}", id, e);
+
+                Err(Status::InternalServerError)
+            }
+            Ok(metadata) => {
+                if metadata.filename == filename {
+                    match database.uploads().delete_upload(&id) {
+                        Err(e) => {
+                            error!(
+                                "Error deleting upload: ID: {} Filename: {} Error: {}",
+                                id, metadata.filename, e
+                            );
+
+                            Err(Status::InternalServerError)
+                        }
+                        Ok(()) => Ok(DOR::data("Successfully deleted".into())),
+                    }
+                } else {
+                    Err(Status::NotFound)
+                }
+            }
+        },
+        None => Ok(DOR::login_and_return(uri!(delete: id, filename))),
     }
 }
