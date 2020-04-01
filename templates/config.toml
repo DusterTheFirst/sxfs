@@ -1,6 +1,9 @@
 # The name for the site to override (ex. My Cool Files Site!!1!)
 name = "sxfs"
 
+# If the "Powered by sxfs" footer should be shown
+powered_by = true
+
 # If the service is behind a reverse proxy or service that provides ssl
 https = false
 

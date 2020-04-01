@@ -10,13 +10,16 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>{{ site_name }} - {% block page %}{% endblock %}</title>
-        {%- block head -%}{%- endblock -%}
+        <title>{{ config.name }} - {% block page %}{% endblock %}</title>
+        {%- include "../target/styles/global.css.html" -%}
+
+        {% block head -%}{%- endblock %}
     </head>
     <body>
-        {%- if show_header -%}
+        {% if show_header -%}
             {%- include "pages/partials/header.html" -%}
-        {%- endif -%}
-        {%- block body -%}{%- endblock -%}
+        {% endif -%}
+        {% block body -%}{% endblock -%}
+        {% include "pages/partials/footer.html" %}
     </body>
 </html>

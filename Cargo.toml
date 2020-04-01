@@ -8,10 +8,11 @@ edition = "2018"
 license = "GPL-3.0"
 repository = "https://github.com/dusterthefirst/sxfs"
 readme = "README.md"
-
+build = "build.rs"
 
 [dependencies]
-askama = { version = "0.9", features = ["with-rocket"] }
+askama = { git = "https://github.com/djc/askama", features = ["with-rocket"] }
+askama_rocket = { git = "https://github.com/djc/askama" }
 base64 = "0.12"
 chrono = "0.4"
 colored = "1.9"
@@ -27,6 +28,10 @@ simplelog = "0.7"
 structopt = "0.3"
 toml = "0.5"
 uuid = { version = "0.8", features = ["v4"] }
+
+[build-dependencies]
+sass-rs = "0.2.2"
+swc = { git = "https://github.com/swc-project/swc" }
 
 [lib]
 name = "sxfs"

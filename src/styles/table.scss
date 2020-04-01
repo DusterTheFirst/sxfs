@@ -1,0 +1,29 @@
+table {
+    border-collapse: collapse;
+    width: 100%;
+
+    tr {
+        background-color: #1d1d1d;
+
+        &:nth-child(2n) {
+            background-color: #414141;
+        }
+
+        th {
+            padding: 10px 15px;
+            font-size: 20px;
+            border-bottom: none;
+            border-top: none;
+        }
+
+        td {
+            padding: 10px 15px;
+
+            &:not(:nth-child(1)):not(:nth-last-child(1)) {
+                border: 1px solid #858585;
+                border-bottom: none;
+                border-top: none;
+            }
+        }
+    }
+}

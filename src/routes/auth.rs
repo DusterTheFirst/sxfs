@@ -14,16 +14,16 @@ use std::convert::TryInto;
 
 /// The login form
 #[get("/login?<redirect>")]
-pub fn login_form(
-    auth: Option<Auth>,
-    config: State<Config>,
+pub fn login_form<'r>(
+    auth: Option<Auth<'r>>,
+    config: State<'r, Config>,
     redirect: Option<String>,
-) -> DOR<LoginTemplate> {
+) -> DOR<'r, LoginTemplate<'r>> {
     let redirect = redirect.unwrap_or_else(|| "/".into());
     match auth {
         Some(_) => DOR::redirect::<Uri<'static>>(redirect.try_into().unwrap_or(uri!(index).into())),
         None => DOR::data(LoginTemplate {
-            site_name: config.name.clone(),
+            config: config.inner(),
             redirect,
         }),
     }
@@ -36,8 +36,7 @@ pub fn login_submit(mut cookies: Cookies, config: State<Config>, user: Form<User
     if config
         .users
         .iter()
-        .map(|u| u.into())
-        .any(|u: User| u == *user)
+        .any(|u| *u == *user)
     {
         // If the user exists, add the cookie with their authentication information
         cookies.add(

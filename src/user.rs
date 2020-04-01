@@ -10,12 +10,3 @@ pub struct User {
     /// The user's login password
     pub password: String,
 }
-
-impl<S: AsRef<str>> From<(S, S)> for User {
-    fn from((username, password): (S, S)) -> Self {
-        User {
-            username: username.as_ref().into(),
-            password: password.as_ref().into(),
-        }
-    }
-}

@@ -141,7 +141,7 @@ fn main() -> io::Result<()> {
         .manage(config)
         .attach(SpaceHelmet::default())
         .attach(AdHoc::on_response("No-Cache", |_, res| {
-            // TODO: Disable for uploads
+            // TODO: Disable for resources
             res.set_header(Header::new(
                 "Cache-Control",
                 "no-store, no-cache, must-revalidate, max-age=0",

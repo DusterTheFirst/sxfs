@@ -3,7 +3,8 @@ use crate::id::ID;
 use chrono::NaiveDateTime;
 use derive_more::Deref;
 use rocket_contrib::database;
-use rusqlite::Connection;
+use rusqlite::{types::FromSqlError, Connection};
+use std::convert::TryInto;
 
 /// Wrapper for the sql database as to provide storage
 #[database("db")]
@@ -33,7 +34,7 @@ pub struct UploadMetadata {
     /// The filename for the stored upload
     pub filename: String,
     /// The size of the stored upload
-    pub size: u32,
+    pub size: u64,
     /// The timestamp of when the upload was created
     pub timestamp: NaiveDateTime,
 }
@@ -48,7 +49,7 @@ impl<'a> UploadTable<'a> {
             "CREATE TABLE IF NOT EXISTS uploads (
                 id            BLOB PRIMARY KEY NOT NULL,
                 filename      TEXT NOT NULL,
-                size          NUMBER NOT NULL,
+                size          BLOB NOT NULL,
                 timestamp     TEXT NOT NULL,
                 contents      BLOB NOT NULL
             )",
@@ -67,7 +68,7 @@ impl<'a> UploadTable<'a> {
             &[
                 &upload.id,
                 &upload.filename,
-                &upload.size,
+                &upload.size.to_ne_bytes().as_ref(),
                 &upload.timestamp,
                 &data,
             ],
@@ -87,7 +88,19 @@ impl<'a> UploadTable<'a> {
                 Ok(UploadMetadata {
                     id: row.get_checked(0)?,
                     filename: row.get_checked(1)?,
-                    size: row.get_checked(2)?,
+                    size: u64::from_le_bytes(
+                        (&row.get_checked::<_, Vec<u8>>(2)?[..])
+                            .try_into()
+                            .map_err(|e| {
+                                error!("Error loading filesize: ID: {} Error: {}", id, e);
+
+                                rusqlite::Error::FromSqlConversionFailure(
+                                    0,
+                                    rusqlite::types::Type::Blob,
+                                    Box::new(FromSqlError::InvalidType),
+                                )
+                            })?,
+                    ),
                     timestamp: row.get_checked(3)?,
                 })
             },
@@ -99,7 +112,7 @@ impl<'a> UploadTable<'a> {
         self.ensure_table_exists()?;
 
         self.query_row_and_then("SELECT contents FROM uploads WHERE id=?", &[id], |row| {
-            Ok(row.get_checked::<usize, Vec<_>>(0)?.into_boxed_slice())
+            Ok(row.get_checked::<_, Vec<_>>(0)?.into_boxed_slice())
         })
     }
 
@@ -113,7 +126,19 @@ impl<'a> UploadTable<'a> {
                 Ok(UploadMetadata {
                     id: row.get_checked(0)?,
                     filename: row.get_checked(1)?,
-                    size: row.get_checked(2)?,
+                    size: u64::from_le_bytes(
+                        (&row.get_checked::<_, Vec<u8>>(2)?[..])
+                            .try_into()
+                            .map_err(|e| {
+                                error!("Error loading filesize: {}", e);
+
+                                rusqlite::Error::FromSqlConversionFailure(
+                                    0,
+                                    rusqlite::types::Type::Blob,
+                                    Box::new(FromSqlError::InvalidType),
+                                )
+                            })?,
+                    ),
                     timestamp: row.get_checked(3)?,
                 })
             })?
@@ -146,6 +171,12 @@ pub struct Link {
     pub timestamp: NaiveDateTime,
 }
 
+/// The amount of hits on a link
+pub type LinkHits = u32;
+
+/// The type returned from listing a link
+pub type LinkListing = (Link, LinkHits);
+
 impl<'a> LinkTable<'a> {
     /// Method to create the table if it does not exist
     fn ensure_table_exists(&self) -> rusqlite::Result<()> {
@@ -175,24 +206,27 @@ impl<'a> LinkTable<'a> {
     }
 
     /// Get a link from the database, using its id
-    pub fn get_link(&self, id: &ID) -> rusqlite::Result<Link> {
+    pub fn get_link(&self, id: &ID) -> rusqlite::Result<LinkListing> {
         self.ensure_table_exists()?;
 
         self.query_row_and_then(
-            "SELECT id, uri, timestamp FROM links WHERE id=?",
+            "SELECT id, uri, timestamp, hits FROM links WHERE id=?",
             &[id],
             |row| {
-                Ok(Link {
-                    id: row.get_checked(0)?,
-                    uri: row.get_checked(1)?,
-                    timestamp: row.get_checked(2)?,
-                })
+                Ok((
+                    Link {
+                        id: row.get_checked(0)?,
+                        uri: row.get_checked(1)?,
+                        timestamp: row.get_checked(2)?,
+                    },
+                    row.get_checked(3)?,
+                ))
             },
         )
     }
 
     /// Get all links from the database
-    pub fn get_all_links(&self) -> rusqlite::Result<Box<[(Link, u32)]>> {
+    pub fn get_all_links(&self) -> rusqlite::Result<Box<[LinkListing]>> {
         self.ensure_table_exists()?;
 
         Ok(self
@@ -219,15 +253,6 @@ impl<'a> LinkTable<'a> {
         self.execute("UPDATE links SET hits = hits + 1 WHERE id=?", &[id])?;
 
         Ok(())
-    }
-
-    /// Get the amount of views that a link has gotten
-    pub fn get_hits(&self, id: &ID) -> rusqlite::Result<u32> {
-        self.ensure_table_exists()?;
-
-        self.query_row_and_then("SELECT hits FROM links WHERE id=?", &[id], |row| {
-            Ok(row.get_checked(0)?)
-        })
     }
 
     /// Delete an existing link

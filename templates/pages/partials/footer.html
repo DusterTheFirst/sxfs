@@ -1,0 +1,7 @@
+{%- include "../target/styles/footer.css.html" -%}
+<footer>
+    <div>{{config.name}}</div>
+    {% if config.powered_by -%}
+        <div>Powered by <a href="https://github.com/DusterTheFirst/sxfs">SXFS</a> &copy; 2019-2020</div>
+    {%- endif %}
+</footer>

@@ -18,11 +18,11 @@ pub mod upload;
 
 /// The main page
 #[get("/")]
-pub fn index(config: State<Config>, auth: Option<Auth>) -> DOR<IndexTemplate> {
+pub fn index<'r>(config: State<'r, Config>, auth: Option<Auth<'r>>) -> DOR<'r, IndexTemplate<'r>> {
     match auth {
         None => DOR::login(),
         Some(auth) => DOR::data(IndexTemplate {
-            site_name: config.name.clone(),
+            config: config.inner(),
             auth,
         }),
     }

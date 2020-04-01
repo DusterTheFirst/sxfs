@@ -1,0 +1,30 @@
+{% extends "base/page.html" %}
+
+{% block page %}Homepage{% endblock %}
+
+{% block head %}{%- include "../target/styles/table.css.html" -%}{% endblock %}
+
+{% block body %}
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Uri</th>
+            <th>Hits</th>
+            <th>Created</th>
+            <th>Link</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for (link, hits) in links -%}
+        <tr>
+            <td>{{link.id}}</td>
+            <td>{{link.uri}}</td>
+            <td>{{hits}}</td>
+            <td>{{link.timestamp.format("%-I:%M %p on %B %-d")}}</td>
+            <td><a href="/l/{{link.id}}">/l/{{link.id}}</a></td>
+        </tr>
+        {% endfor -%}
+    </tbody>
+</table>
+{% endblock %}

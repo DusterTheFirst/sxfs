@@ -1,19 +1,32 @@
 //! The app wide configuration and tools to assist with manipulating it
 
 use crate::generate::generate_base64;
-use crate::{create_parent_directories, templates::ConfigTemplate};
+use crate::{create_parent_directories, templates::ConfigTemplate, user::User};
 use askama::Template;
 use io::ErrorKind;
-use serde::Deserialize;
-use std::collections::HashMap;
+use serde::{Deserialize, Deserializer};
 use std::fs;
-use std::{io, path::Path};
+use std::{collections::HashMap, io, path::Path};
+
+fn deserialize_users<'de, D>(deserializer: D) -> Result<Box<[User]>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let map: HashMap<String, String> = Deserialize::deserialize(deserializer)?;
+
+    Ok(map
+        .into_iter()
+        .map(|(username, password)| User { username, password })
+        .collect::<Box<_>>())
+}
 
 #[derive(Deserialize, Debug)]
 /// The configuration for the app
 pub struct Config {
     /// The name of the app to use
     pub name: String,
+    /// If the powered by footer part should be shown
+    pub powered_by: bool,
     /// If https is enabled for the site (behind reverse-proxy)
     pub https: bool,
     /// The domain to use for accessing and viewing the uploads
@@ -27,8 +40,9 @@ pub struct Config {
     /// The token to use for uploading files from sharex
     /// (Treat this like a password, it is an all access pass to upload)
     pub upload_token: String,
+    #[serde(deserialize_with = "deserialize_users")]
     /// The users to have access to the files
-    pub users: HashMap<String, String>,
+    pub users: Box<[User]>,
 }
 
 impl Config {

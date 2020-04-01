@@ -1,16 +1,18 @@
 //! Routes for handling uploads
 
 use crate::{
+    config::Config,
     database::{Database, UploadMetadata},
     guard::{auth::Auth, content::ContentLength},
     id::ID,
     responder::dor::DOR,
+    templates::page::UploadsTemplate,
 };
 use chrono::Local;
 use rocket::{
     http::{ContentType, Status},
     response::{Content, Redirect},
-    Data,
+    Data, State,
 };
 use rocket_contrib::json::Json;
 use serde::Serialize;
@@ -49,8 +51,11 @@ pub fn create<'r>(
 
     let upload = UploadMetadata {
         id,
-        filename, // TODO: CATCHER
-        size: data.len().try_into().map_err(|_| Status::PayloadTooLarge)?,
+        filename,
+        size: data
+            .len()
+            .try_into()
+            .map_err(|_| Status::InternalServerError)?,
         timestamp: Local::now().naive_local(),
     };
 
@@ -76,26 +81,21 @@ pub fn create<'r>(
 
 /// Endpoint to view uploaded assets
 #[get("/u")]
-pub fn all(auth: Option<Auth>, database: Database) -> Result<DOR<'static, String>, Status> {
+pub fn all<'r>(
+    auth: Option<Auth<'r>>,
+    config: State<'r, Config>,
+    database: Database,
+) -> Result<DOR<'r, UploadsTemplate<'r>>, Status> {
     Ok(match auth {
-        Some(_) => DOR::data(
-            database
-                .uploads()
-                .get_all_uploads()
-                .map_err(|e| {
-                    error!("Error indexing uploads: {}", e);
+        Some(auth) => DOR::data(UploadsTemplate {
+            auth,
+            config: config.inner(),
+            uploads: database.uploads().get_all_uploads().map_err(|e| {
+                error!("Error indexing uploads: {}", e);
 
-                    Status::InternalServerError
-                })?
-                .into_iter()
-                .map(|x| {
-                    format!(
-                        "ID: {}, Filename: {}, Timestamp: {}, Filesize {}\n",
-                        x.id, x.filename, x.timestamp, x.size
-                    )
-                })
-                .collect(),
-        ),
+                Status::InternalServerError
+            })?,
+        }),
         None => DOR::login_and_return(uri!(all)),
     })
 }

@@ -1,15 +1,18 @@
 //! Routes for handling shortened links
 
 use crate::{
+    config::Config,
     database::{Database, Link},
     guard::auth::Auth,
     id::ID,
     responder::dor::DOR,
+    templates::page::LinksTemplate,
 };
 use chrono::Local;
 use rocket::{
     http::{uri::Uri, Status},
     response::Redirect,
+    State,
 };
 use rocket_contrib::json::Json;
 use serde::Serialize;
@@ -52,27 +55,21 @@ pub fn create(_auth: Auth, database: Database, uri: String) -> Result<Json<LinkR
 
 /// Endpoint to view shortened urls
 #[get("/l")]
-pub fn all<'a>(auth: Option<Auth>, database: Database) -> Result<DOR<'a, String>, Status> {
+pub fn all<'r>(
+    auth: Option<Auth<'r>>,
+    config: State<'r, Config>,
+    database: Database,
+) -> Result<DOR<'r, LinksTemplate<'r>>, Status> {
     Ok(match auth {
-        Some(_) => {
-            let table = database.links();
-            let links = table.get_all_links().map_err(|e| {
+        Some(auth) => DOR::data(LinksTemplate {
+            auth,
+            links: database.links().get_all_links().map_err(|e| {
                 error!("Error indexing links: {}", e);
 
                 Status::InternalServerError
-            })?;
-            DOR::data(
-                links
-                    .into_iter()
-                    .map(|(link, hits)| {
-                        format!(
-                            "ID: {}, Uri: {}, Timestamp: {}, Hits: {}\n",
-                            link.id, link.uri, link.timestamp, hits
-                        )
-                    })
-                    .collect(),
-            )
-        }
+            })?,
+            config: config.inner(),
+        }),
         None => DOR::login_and_return(uri!(all)),
     })
 }
@@ -88,7 +85,7 @@ pub fn follow(database: Database, id: ID) -> Result<Redirect, Status> {
 
             Err(Status::InternalServerError)
         }
-        Ok(link) => {
+        Ok((link, _)) => {
             links.hit(&id).map_err(|e| {
                 error!("Error incrementing hits on link: ID: {} Error: {}", id, e);
 
@@ -114,7 +111,7 @@ pub fn delete(
 
                 Err(Status::InternalServerError)
             }
-            Ok(link) => match database.uploads().delete_upload(&id) {
+            Ok((link, _)) => match database.uploads().delete_upload(&id) {
                 Err(e) => {
                     error!(
                         "Error deleting link: ID: {} Uri: {} Error: {}",

@@ -3,23 +3,23 @@
 {% block page %}Login{% endblock %}
 
 {% block vars %}
-    {% let show_header = false %}
+{% let show_header = false %}
 {% endblock %}
 
 {% block head %}
-    <script src="/login.js" defer async></script>
-{% endblock %}
+{%- include "../target/scripts/login.js.html" -%}
+{% endblock -%}
 
 {% block body %}
-    <form id="form">
-        <label>
-            Username
-            <input type="text" name="username" />
-        </label>
-        <label>
-            Password
-            <input type="password" name="password" />
-        </label>
-        <input type="submit" />
-    </form>
+<form id="form">
+    <label>
+        Username
+        <input type="text" name="username" />
+    </label>
+    <label>
+        Password
+        <input type="password" name="password" />
+    </label>
+    <input type="submit" />
+</form>
 {% endblock %}

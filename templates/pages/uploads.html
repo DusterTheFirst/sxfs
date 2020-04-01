@@ -1,0 +1,28 @@
+{% extends "base/page.html" %}
+
+{% block page %}Homepage{% endblock %}
+
+{% block head %}{%- include "../target/styles/table.css.html" -%}{% endblock %}
+
+{% block body %}
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Filename</th>
+            <th>Created</th>
+            <th>Filesize</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for upload in uploads -%}
+        <tr onclick="window.location.assign('/u/{{upload.id}}/{{upload.filename}}')">
+            <td>{{upload.id}}</td>
+            <td>{{upload.filename}}</td>
+            <td>{{upload.timestamp.format("%-I:%M %p on %B %-d")}}</td>
+            <td>{{upload.size|filesizeformat}}</td>
+        </tr>
+        {%- endfor %}
+    </tbody>
+</table>
+{% endblock %}

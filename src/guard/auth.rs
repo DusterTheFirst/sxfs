@@ -10,14 +10,14 @@ use std::convert::TryInto;
 
 /// A method of authentication
 #[derive(Debug)]
-pub enum Auth {
+pub enum Auth<'a> {
     /// A user account used for authentication
     User(User),
     /// An upload token used for authentication
-    UploadToken(String),
+    UploadToken(&'a str),
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for Auth {
+impl<'a, 'r> FromRequest<'a, 'r> for Auth<'a> {
     type Error = ();
 
     fn from_request(request: &'a Request<'r>) -> Outcome<Self, Self::Error> {
@@ -57,12 +57,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for Auth {
                     };
 
                     // Check if any of the users in the config match
-                    if config
-                        .users
-                        .iter()
-                        .map(|u| u.into())
-                        .any(|u: User| u == user)
-                    {
+                    if config.users.iter().any(|u| *u == user) {
                         // Return the user in a success if so
                         Outcome::Success(Auth::User(user))
                     } else {
