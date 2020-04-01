@@ -19,7 +19,9 @@
         {% if show_header -%}
             {%- include "pages/partials/header.html" -%}
         {% endif -%}
-        {% block body -%}{% endblock -%}
+        <div class="body">
+            {% block body -%}{% endblock -%}
+        </div>
         {% include "pages/partials/footer.html" %}
     </body>
 </html>

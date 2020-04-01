@@ -1,4 +1,50 @@
 header {
     position: sticky;
+    display: block;
     top: 0;
+    width: 100%;
+    height: auto;
+    background-color: black;
+
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    .left {
+        float: left;
+    }
+
+    .right {
+        text-align: right;
+    }
+
+    .link {
+        display: inline-block;
+        padding: 15px 20px;
+        color: white;
+
+        &:visited {
+            color: inherit;
+        }
+
+        .dropdown {
+            display: none;
+        }
+
+        &:hover {
+            background-color: #222222;
+
+            .dropdown {
+                display: block;
+                position: absolute;
+                transform: translate(-20px, 15px);
+                background-color: black;
+
+                .link {
+                    display: block;
+                }
+            }
+        }
+    }
 }

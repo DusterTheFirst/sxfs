@@ -21,6 +21,9 @@ in rust and containerized with docker for your pleasure
 ### Adding the uploader
 ### Repurposing for use with a custom upload client
 
+## Building
+Requires `cargo` and `tsc` (`yarn global add typescript`)
+
 ## License
     A file server for handling uploads from the ShareX client with a web ui
     Copyright (C) 2020  Zachary Kohnen

@@ -1,13 +1,18 @@
 {%- include "../target/styles/header.css.html" -%}
 <header>
-    <ul>
-        <li><a href="/">{{config.name}}</a></li>
-        <li><a href="/u">Uploads</a></li>
-        <li><a href="/l">Shortened URLs</a></li>
-        <li><a href="/sxcu/uploader.sxcu" download>Download the uploader file</a></li>
-        <li><a href="/sxcu/shortener.sxcu" download>Download the shortener file</a></li>
-    </ul>
-    <ul>
-        <li><a href="/logout">Logout</a></li>
-    </ul>
+    <div class="left">
+        <a href="/" class="link">Home</a>
+        <a href="/u" class="link">Uploads</a>
+        <a href="/l" class="link">Shortened URLs</a>
+        <div class="link">
+            <div class="label">Downloads</div>
+            <div class="dropdown">
+                <div class="link"><a href="/sxcu/uploader.sxcu" download>uploader.sxcu</a></div>
+                <div class="link"><a href="/sxcu/shortener.sxcu" download>shortener.sxcu</a></div>
+            </div>
+        </div>
+    </div>
+    <div class="right">
+        <a href="/logout" class="link">Logout</a>
+    </div>
 </header>

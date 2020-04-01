@@ -2,7 +2,10 @@
 
 {% block page %}Homepage{% endblock %}
 
-{% block head %}{%- include "../target/styles/table.css.html" -%}{% endblock %}
+{% block head %}
+{%- include "../target/styles/table.css.html" -%}
+{%- include "../target/scripts/uploads.js.html" -%}
+{% endblock %}
 
 {% block body %}
 <table>
@@ -12,17 +15,24 @@
             <th>Filename</th>
             <th>Created</th>
             <th>Filesize</th>
+            <th>Delete</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="uploads_table">
         {% for upload in uploads -%}
-        <tr onclick="window.location.assign('/u/{{upload.id}}/{{upload.filename}}')">
+        <tr data-link="/u/{{upload.id}}/{{upload.filename}}">
             <td>{{upload.id}}</td>
             <td>{{upload.filename}}</td>
             <td>{{upload.timestamp.format("%-I:%M %p on %B %-d")}}</td>
             <td>{{upload.size|filesizeformat}}</td>
+            <td><a href="/u/d/{{upload.id}}/{{upload.filename}}">Delete</a></td>
         </tr>
         {%- endfor %}
     </tbody>
 </table>
+<div class="info" hidden>
+    <img class="preview">
+    <a class="open">Open</a>
+    <a class="delete">Delete</a>
+</div>
 {% endblock %}

@@ -1,9 +1,12 @@
 table {
     border-collapse: collapse;
-    width: 100%;
-
+    
     tr {
         background-color: #1d1d1d;
+        
+        &[onclick] {
+            cursor: pointer;
+        }
 
         &:nth-child(2n) {
             background-color: #414141;

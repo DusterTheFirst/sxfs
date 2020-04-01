@@ -50,7 +50,7 @@ impl<'a> UploadTable<'a> {
                 id            BLOB PRIMARY KEY NOT NULL,
                 filename      TEXT NOT NULL,
                 size          BLOB NOT NULL,
-                timestamp     TEXT NOT NULL,
+                timestamp     NUMBER NOT NULL,
                 contents      BLOB NOT NULL
             )",
             &[],
@@ -69,7 +69,7 @@ impl<'a> UploadTable<'a> {
                 &upload.id,
                 &upload.filename,
                 &upload.size.to_ne_bytes().as_ref(),
-                &upload.timestamp,
+                &upload.timestamp.timestamp(),
                 &data,
             ],
         )?;
@@ -101,7 +101,7 @@ impl<'a> UploadTable<'a> {
                                 )
                             })?,
                     ),
-                    timestamp: row.get_checked(3)?,
+                    timestamp: NaiveDateTime::from_timestamp(row.get_checked(3)?, 0),
                 })
             },
         )
@@ -121,7 +121,7 @@ impl<'a> UploadTable<'a> {
         self.ensure_table_exists()?;
 
         Ok(self
-            .prepare("SELECT id, filename, size, timestamp FROM uploads")?
+            .prepare("SELECT id, filename, size, timestamp FROM uploads ORDER BY timestamp DESC")?
             .query_map::<rusqlite::Result<UploadMetadata>, _>(&[], |row| {
                 Ok(UploadMetadata {
                     id: row.get_checked(0)?,
@@ -139,7 +139,7 @@ impl<'a> UploadTable<'a> {
                                 )
                             })?,
                     ),
-                    timestamp: row.get_checked(3)?,
+                    timestamp: NaiveDateTime::from_timestamp(row.get_checked(3)?, 0),
                 })
             })?
             .flatten()
@@ -184,7 +184,7 @@ impl<'a> LinkTable<'a> {
             "CREATE TABLE IF NOT EXISTS links (
                 id          BLOB PRIMARY KEY NOT NULL,
                 uri         TEXT NOT NULL,
-                timestamp   TEXT NOT NULL,
+                timestamp   NUMBER NOT NULL,
                 hits        NUMBER NOT NULL
             )",
             &[],
@@ -199,7 +199,7 @@ impl<'a> LinkTable<'a> {
 
         self.execute(
             "INSERT INTO links (id, uri, timestamp, hits) VALUES (?, ?, ?, 0)",
-            &[&link.id, &link.uri.to_string(), &link.timestamp],
+            &[&link.id, &link.uri.to_string(), &link.timestamp.timestamp()],
         )?;
 
         Ok(())
@@ -217,7 +217,7 @@ impl<'a> LinkTable<'a> {
                     Link {
                         id: row.get_checked(0)?,
                         uri: row.get_checked(1)?,
-                        timestamp: row.get_checked(2)?,
+                        timestamp: NaiveDateTime::from_timestamp(row.get_checked(2)?, 0),
                     },
                     row.get_checked(3)?,
                 ))
@@ -230,13 +230,13 @@ impl<'a> LinkTable<'a> {
         self.ensure_table_exists()?;
 
         Ok(self
-            .prepare("SELECT id, uri, timestamp, hits FROM links")?
+            .prepare("SELECT id, uri, timestamp, hits FROM links ORDER BY timestamp DESC")?
             .query_map::<rusqlite::Result<_>, _>(&[], |row| {
                 Ok((
                     Link {
                         id: row.get_checked(0)?,
                         uri: row.get_checked(1)?,
-                        timestamp: row.get_checked(2)?,
+                        timestamp: NaiveDateTime::from_timestamp(row.get_checked(2)?, 0),
                     },
                     row.get_checked(3)?,
                 ))

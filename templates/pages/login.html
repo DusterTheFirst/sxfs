@@ -8,6 +8,7 @@
 
 {% block head %}
 {%- include "../target/scripts/login.js.html" -%}
+{%- include "../target/styles/login.css.html" -%}
 {% endblock -%}
 
 {% block body %}
@@ -20,6 +21,6 @@
         Password
         <input type="password" name="password" />
     </label>
-    <input type="submit" />
+    <input type="submit" value="Login" />
 </form>
 {% endblock %}
