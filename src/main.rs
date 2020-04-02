@@ -44,7 +44,7 @@ fn main() -> io::Result<()> {
                 0 => LevelFilter::Warn,
                 1 => LevelFilter::Info,
                 2 => LevelFilter::Debug,
-                _ => LevelFilter::Trace
+                _ => LevelFilter::Trace,
             },
         ),
         create_logger(
@@ -136,8 +136,14 @@ fn main() -> io::Result<()> {
         )
         .manage(config)
         .attach(SpaceHelmet::default())
-        .attach(AdHoc::on_response("No-Cache", |_, res| {
-            // TODO: Disable for resources
+        .attach(AdHoc::on_response("No-Cache", |req, res| {
+            if let [first_path, ..] = req.uri().segments().collect::<Vec<_>>().as_slice() {
+                // Ignore uploads directory
+                if first_path == &"u" {
+                    return;
+                }
+            }
+
             res.set_header(Header::new(
                 "Cache-Control",
                 "no-store, no-cache, must-revalidate, max-age=0",

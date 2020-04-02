@@ -11,7 +11,7 @@
 {% for upload in uploads -%}
 <div class="upload" data-id="{{upload.id}}" data-filename="{{upload.filename}}" data-domain="{{config.domain}}" data-https="{{config.https}}">
     {%- if upload.is_image() %}
-    <img src="/u/{{upload.id}}/{{upload.filename}}" alt="{{upload.filename}}">
+    <img class="lazy" data-src="/u/{{upload.id}}/{{upload.filename}}" alt="{{upload.filename}}">
     {%- else -%}
     <img src="/blank_file.svg" alt="{{upload.filename}}" width="200px">
     {% endif -%}

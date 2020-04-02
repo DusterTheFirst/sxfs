@@ -28,4 +28,24 @@ window.addEventListener("load", () => {
             await navigator.clipboard.writeText(`http${https === "true" ? "s" : ""}://${domain}/u/${id}/${filename}`);
         });
     }
+
+    // Get images to lazy load
+    const lazyImages = document.querySelectorAll("img.lazy");
+
+    const lazyImageObserver = new IntersectionObserver((entries, _observer) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                const lazyImage = entry.target as HTMLImageElement;
+                lazyImage.src = lazyImage.dataset.src ?? "";
+                lazyImage.onload = () => {
+                    lazyImage.classList.remove("lazy");
+                }
+                lazyImageObserver.unobserve(lazyImage);
+            }
+        });
+    });
+
+    lazyImages.forEach((lazyImage) => {
+        lazyImageObserver.observe(lazyImage);
+    });
 });
