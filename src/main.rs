@@ -8,7 +8,7 @@ use rocket::{
     fairing::AdHoc,
     http::Header,
 };
-use rocket_contrib::helmet::SpaceHelmet;
+use rocket_contrib::{helmet::SpaceHelmet, serve::StaticFiles};
 use simplelog::{
     CombinedLogger, ConfigBuilder as LogConfigBuilder, LevelFilter, SharedLogger, SimpleLogger,
     TermLogger, TerminalMode,
@@ -39,17 +39,16 @@ fn main() -> io::Result<()> {
     // Init logger
     CombinedLogger::init(vec![
         create_logger(
-            "sxfs",
+            &["sxfs"],
             match args.verbose {
                 0 => LevelFilter::Warn,
                 1 => LevelFilter::Info,
                 2 => LevelFilter::Debug,
-                3 => LevelFilter::Trace,
-                _ => LevelFilter::Off,
+                _ => LevelFilter::Trace
             },
         ),
         create_logger(
-            "rocket",
+            &["rocket", "_"],
             if args.rocket_log {
                 LevelFilter::Info
             } else {
@@ -68,10 +67,7 @@ fn main() -> io::Result<()> {
             // Panic
             panic!("{:?}", er);
         }
-        Ok(config) => {
-            debug!("Loaded Config: {:#?}", config);
-            config
-        }
+        Ok(config) => config,
     };
 
     // Write out uploaders
@@ -111,7 +107,7 @@ fn main() -> io::Result<()> {
     .map_err(|e| Error::new(ErrorKind::InvalidData, e))?;
 
     // Start web interface
-    rocket::custom(rocket_config)
+    let rocket = rocket::custom(rocket_config)
         .register(catchers![
             routes::catcher::internal_error,
             routes::catcher::not_found,
@@ -147,15 +143,25 @@ fn main() -> io::Result<()> {
                 "no-store, no-cache, must-revalidate, max-age=0",
             ));
         }))
-        .attach(Database::fairing())
-        .launch();
+        .attach(Database::fairing());
+
+    if cfg!(debug_assertions) {
+        rocket.mount("/src", StaticFiles::from("src"))
+    } else {
+        rocket
+    }
+    .launch();
 
     Ok(())
 }
 
 /// Create a configured logger with the specified settings
-fn create_logger(filter: &'static str, level: LevelFilter) -> Box<dyn SharedLogger> {
-    let config = LogConfigBuilder::new().add_filter_allow_str(filter).build();
+fn create_logger(filters: &'static [&'static str], level: LevelFilter) -> Box<dyn SharedLogger> {
+    let mut config = LogConfigBuilder::new();
+    for filter in filters {
+        config.add_filter_allow_str(filter);
+    }
+    let config = config.build();
 
     match TermLogger::new(level, config.clone(), TerminalMode::Mixed) {
         None => SimpleLogger::new(level, config),

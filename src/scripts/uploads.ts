@@ -1,14 +1,31 @@
+// Add event listener for onload
 window.addEventListener("load", () => {
-    let table = document.getElementById("uploads_table");
-    const info_div = document.querySelector("div.info");
-    const preview = document.querySelector("div.info");
-    const open_link = document.querySelector("div.info");
-    const delete_link = document.querySelector("div.info");
+    /** The uploads  */
+    const uploads = document.querySelectorAll<HTMLDivElement>("div.upload")!;
 
-    let rows = table.querySelectorAll<HTMLTableRowElement>("tr[data-link]");
-    for (let row of rows) {
-        let link: string = row.dataset.link;
+    // Loop through the uploads
+    for (let upload of uploads) {
+        const { id, filename, domain, https } = upload.dataset;
+        const delete_button = upload.querySelector<HTMLButtonElement>("button.delete")!;
+        const copy_button = upload.querySelector<HTMLButtonElement>("button.copy")!;
 
-        
+        upload.addEventListener("click", (e) => {
+            e.stopImmediatePropagation();
+
+            location.href = `/u/${id}/${filename}`;
+        });
+
+        delete_button.addEventListener("click", (e) => {
+            e.stopImmediatePropagation();
+
+            if (confirm(`Delete ${filename}?`))
+                location.href = `/u/d/${id}/${filename}`;
+        });
+
+        copy_button.addEventListener("click", async (e) => {
+            e.stopImmediatePropagation();
+
+            await navigator.clipboard.writeText(`http${https === "true" ? "s" : ""}://${domain}/u/${id}/${filename}`);
+        });
     }
 });

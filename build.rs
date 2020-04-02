@@ -1,5 +1,6 @@
 use sass_rs::{compile_file, Options, OutputStyle};
 use std::{
+    env::var,
     fs,
     io::{Error, ErrorKind, Result},
     path::PathBuf,
@@ -8,6 +9,8 @@ use std::{
 use which::which;
 
 fn main() -> Result<()> {
+    let debug = var("PROFILE").unwrap_or_default() == "debug";
+
     println!("cargo:rerun-if-changed=build.rs");
 
     // COMPILE TS
@@ -20,6 +23,10 @@ fn main() -> Result<()> {
 
         println!("cargo:rerun-if-changed={}", inpath.to_string_lossy());
 
+        if inpath.is_dir() {
+            continue;
+        }
+
         println!(
             "{:?}",
             which("tsc").map_err(|e| Error::new(ErrorKind::NotFound, e))?
@@ -28,6 +35,12 @@ fn main() -> Result<()> {
             .args(&[
                 "--outFile",
                 "target/scripts/temp.js",
+                "--alwaysStrict",
+                "--strict",
+                if debug { "--inlineSourceMap" } else { "" },
+                if debug { "--removeComments" } else { "" },
+                "--lib",
+                "dom,dom.iterable,es2016",
                 "-t",
                 "ES2016",
                 &inpath.to_string_lossy(),
@@ -47,7 +60,7 @@ fn main() -> Result<()> {
                         .replace(".ts", ".js.html")
                 ),
                 format!(
-                    "<script>{}</script>",
+                    "<script>\n{}\n</script>",
                     String::from_utf8_lossy(&fs::read("target/scripts/temp.js")?)
                 ),
             )?;
@@ -77,10 +90,18 @@ fn main() -> Result<()> {
     for style in styles_listing {
         println!("cargo:rerun-if-changed={}", style.path().to_string_lossy());
 
+        if style.path().is_dir() {
+            continue;
+        }
+
         let content = compile_file(
             style.path(),
             Options {
-                output_style: OutputStyle::Compressed,
+                output_style: if debug {
+                    OutputStyle::Expanded
+                } else {
+                    OutputStyle::Compressed
+                },
                 precision: 2,
                 indented_syntax: false,
                 include_paths: Vec::new(),
@@ -101,7 +122,7 @@ fn main() -> Result<()> {
                     .to_string_lossy()
                     .replace(".scss", ".css.html")
             ),
-            format!("<style>{}</style>", content),
+            format!("<style>\n{}\n</style>", content),
         )?;
     }
 

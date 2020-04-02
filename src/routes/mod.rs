@@ -50,7 +50,7 @@ pub fn uploaders<'r>(
 }
 
 /// Endpoint to acces static files
-#[get("/<filename..>", rank = 10)]
+#[get("/<filename..>", rank = 100)]
 pub fn public_files(filename: PathBuf) -> Option<Content<Vec<u8>>> {
     #[derive(RustEmbed)]
     #[folder = "public"]

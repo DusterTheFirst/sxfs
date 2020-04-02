@@ -1,0 +1,106 @@
+.body {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+
+    .upload {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        position: relative;
+        margin: 10px 20px;
+        border: 5px solid #1a1a1b;
+        background-color: #1a1a1bb0;
+
+        img {
+            display: inline-block;
+            vertical-align: middle;
+            min-width: 100px;
+            max-height: 250px;
+        }
+
+        .info {
+            display: none;
+        }
+
+        &:hover .info {
+            display: flex;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-height: 100%;
+            z-index: 10;
+            padding: 10px 0;
+
+            background-color: #1a1a1be5;
+
+            text-align: center;
+            flex-direction: column;
+            align-content: space-around;
+            flex-wrap: wrap;
+
+            * {
+                font-size: 15px;
+                display: inline-block;
+                padding: 5px 0;
+                margin: auto auto;
+            }
+
+            .filename::before {
+                content: "Filename: ";
+                font-weight: bold;
+            }
+
+            .id::before {
+                content: "ID: ";
+                font-weight: bold;
+            }
+
+            .size::before {
+                content: "Filesize: ";
+                font-weight: bold;
+            }
+
+            .uploaded::before {
+                content: "Uploaded: ";
+                font-weight: bold;
+            }
+
+            .buttons {
+                display: flex;
+                flex-direction: row;
+                align-content: space-around;
+
+                button {
+                    font-weight: bold;
+                    border: none;
+                    border-radius: 10px;
+                    width: auto;
+                    color: #ffffff;
+                    padding: 5px 10px;
+                    margin: auto 10px;
+                    cursor: pointer;
+                }
+
+                .delete {
+                    background-color: #a01e1e;
+
+                    &:active {
+                        background-color: #611111;
+                    }
+                }
+
+                .copy {
+                    background-color: #1e6ca0;
+
+                    &:active {
+                        background-color: #1e3ca0;
+                    }
+                }
+            }
+        }
+    }
+}

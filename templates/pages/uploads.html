@@ -1,38 +1,30 @@
 {% extends "base/page.html" %}
 
-{% block page %}Homepage{% endblock %}
+{% block page %}Uploads{% endblock %}
 
 {% block head %}
-{%- include "../target/styles/table.css.html" -%}
+{%- include "../target/styles/uploads.css.html" -%}
 {%- include "../target/scripts/uploads.js.html" -%}
 {% endblock %}
 
 {% block body %}
-<table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Filename</th>
-            <th>Created</th>
-            <th>Filesize</th>
-            <th>Delete</th>
-        </tr>
-    </thead>
-    <tbody id="uploads_table">
-        {% for upload in uploads -%}
-        <tr data-link="/u/{{upload.id}}/{{upload.filename}}">
-            <td>{{upload.id}}</td>
-            <td>{{upload.filename}}</td>
-            <td>{{upload.timestamp.format("%-I:%M %p on %B %-d")}}</td>
-            <td>{{upload.size|filesizeformat}}</td>
-            <td><a href="/u/d/{{upload.id}}/{{upload.filename}}">Delete</a></td>
-        </tr>
-        {%- endfor %}
-    </tbody>
-</table>
-<div class="info" hidden>
-    <img class="preview">
-    <a class="open">Open</a>
-    <a class="delete">Delete</a>
+{% for upload in uploads -%}
+<div class="upload" data-id="{{upload.id}}" data-filename="{{upload.filename}}" data-domain="{{config.domain}}" data-https="{{config.https}}">
+    {%- if upload.is_image() %}
+    <img src="/u/{{upload.id}}/{{upload.filename}}" alt="{{upload.filename}}">
+    {%- else -%}
+    <img src="/blank_file.svg" alt="{{upload.filename}}" width="200px">
+    {% endif -%}
+    <div class="info">
+        <div class="filename">{{upload.filename}}</div>
+        <div class="id">{{upload.id}}</div>
+        <div class="size">{{upload.size|filesizeformat}}</div>
+        <div class="uploaded">{{upload.timestamp.format("%-I:%M %p on %B %-d")}}</div>
+        <div class="buttons">
+            <button class="copy">Copy Link</button>
+            <button class="delete">Delete</button>
+        </div>
+    </div>
 </div>
+{% endfor -%}
 {% endblock %}

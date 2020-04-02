@@ -2,9 +2,10 @@
 use crate::id::ID;
 use chrono::NaiveDateTime;
 use derive_more::Deref;
+use rocket::http::ContentType;
 use rocket_contrib::database;
 use rusqlite::{types::FromSqlError, Connection};
-use std::convert::TryInto;
+use std::{convert::TryInto, path::Path};
 
 /// Wrapper for the sql database as to provide storage
 #[database("db")]
@@ -37,6 +38,21 @@ pub struct UploadMetadata {
     pub size: u64,
     /// The timestamp of when the upload was created
     pub timestamp: NaiveDateTime,
+}
+
+impl UploadMetadata {
+    /// Helper fn to check if an upload is an image
+    pub fn is_image(&self) -> bool {
+        if let Some(ext) = Path::new(&self.filename).extension() {
+            if let Some(ct) = ContentType::from_extension(&ext.to_string_lossy()) {
+                ct.top() == "image"
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
 }
 
 /// The data that is stored in an upload
