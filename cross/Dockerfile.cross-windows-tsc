@@ -1,0 +1,6 @@
+FROM rustembedded/cross:x86_64-pc-windows-gnu
+
+RUN curl -sL https://deb.nodesource.com/setup_13.x | bash -
+RUN apt-get update && \
+    apt-get install -y nodejs
+RUN npm i -g typescript

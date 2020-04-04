@@ -15,8 +15,8 @@ in rust and containerized with docker for your pleasure
 
 ## Usage
 
-### Setup (docker)
 ### Setup (standalone)
+### Setup (docker)
 ### Setting Up DNS
 ### Adding the uploader
 ### Repurposing for use with a custom upload client

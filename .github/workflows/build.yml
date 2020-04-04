@@ -64,7 +64,7 @@ jobs:
     needs: [test]
     strategy:
       matrix:
-        target: [i686-pc-windows-gnu, x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu, i686-unknown-linux-gnu]
+        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
@@ -87,9 +87,7 @@ jobs:
         with:
           toolchain: nightly
           target: ${{ matrix.target }}
-      - uses: actions/setup-node@v1
-      - run: yarn global add typescript
-      - run: tsc -h
+      - run: ./cross/build.sh
       - name: cargo build
         uses: actions-rs/cargo@v1
         with:
