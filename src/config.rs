@@ -6,9 +6,9 @@ use askama::Template;
 use io::ErrorKind;
 use serde::{Deserialize, Deserializer};
 use std::fs;
-use std::{collections::HashMap, io, path::Path};
+use std::{collections::HashMap, io, path::Path, sync::Arc};
 
-fn deserialize_users<'de, D>(deserializer: D) -> Result<Box<[User]>, D::Error>
+fn deserialize_users<'de, D>(deserializer: D) -> Result<Arc<[User]>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -17,10 +17,10 @@ where
     Ok(map
         .into_iter()
         .map(|(username, password)| User { username, password })
-        .collect::<Box<_>>())
+        .collect::<Arc<_>>())
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 /// The configuration for the app
 pub struct Config {
     /// The name of the app to use
@@ -42,7 +42,7 @@ pub struct Config {
     pub upload_token: String,
     #[serde(deserialize_with = "deserialize_users")]
     /// The users to have access to the files
-    pub users: Box<[User]>,
+    pub users: Arc<[User]>,
 }
 
 impl Config {

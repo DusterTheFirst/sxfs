@@ -6,7 +6,7 @@ use crate::{
     guard::{auth::Auth, content::ContentLength},
     id::ID,
     responder::dor::DOR,
-    templates::page::UploadsTemplate,
+    templates::page::{DeletedTemplate, UploadsTemplate},
 };
 use chrono::Local;
 use rocket::{
@@ -87,14 +87,13 @@ pub fn all<'r>(
     database: Database,
 ) -> Result<DOR<'r, UploadsTemplate<'r>>, Status> {
     Ok(match auth {
-        Some(auth) => DOR::data(UploadsTemplate {
-            auth,
+        Some(_) => DOR::data(UploadsTemplate {
             config: config.inner(),
             uploads: database.uploads().get_all_uploads().map_err(|e| {
                 error!("Error indexing uploads: {}", e);
 
                 Status::InternalServerError
-            })?,
+            })?.into_vec().into_iter().enumerate().collect(),
         }),
         None => DOR::login_and_return(uri!(all)),
     })
@@ -166,12 +165,13 @@ pub fn delete_by_id(database: Database, id: ID) -> Result<Redirect, Status> {
 
 /// Endpoint to delete an uploaded assest by its ID and filename
 #[get("/u/d/<id>/<filename>")]
-pub fn delete(
+pub fn delete<'r>(
     database: Database,
-    auth: Option<Auth>,
+    config: State<'r, Config>,
+    auth: Option<Auth<'r>>,
     id: ID,
     filename: String,
-) -> Result<DOR<'static, String>, Status> {
+) -> Result<DOR<'r, DeletedTemplate<'r>>, Status> {
     match auth {
         Some(_) => match database.uploads().get_upload_metatdata(&id) {
             Err(rusqlite::Error::QueryReturnedNoRows) => Err(Status::NotFound),
@@ -191,7 +191,10 @@ pub fn delete(
 
                             Err(Status::InternalServerError)
                         }
-                        Ok(()) => Ok(DOR::data("Successfully deleted".into())),
+                        Ok(()) => Ok(DOR::data(DeletedTemplate {
+                            config: config.inner(),
+                            resource_type: "upload",
+                        })),
                     }
                 } else {
                     Err(Status::NotFound)

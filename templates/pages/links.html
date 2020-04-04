@@ -2,27 +2,29 @@
 
 {% block page %}Links{% endblock %}
 
-{% block head %}{%- include "../target/styles/table.css.html" -%}{% endblock %}
+{% block head %}
+{%- include "../target/styles/table.css.html" -%}
+{% endblock %}
 
 {% block body %}
 <table>
     <thead>
         <tr>
-            <th>ID</th>
-            <th>Uri</th>
-            <th>Hits</th>
+            <th>Shortened URI</th>
+            <th>Original URI</th>
+            <th>Visits</th>
             <th>Created</th>
-            <th>Link</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
         {% for (link, hits) in links -%}
         <tr>
-            <td>{{link.id}}</td>
-            <td>{{link.uri}}</td>
+            <td><a href="/l/{{link.id}}">/l/{{link.id}}</a></td>
+            <td><a href="/l/{{link.id}}">{{link.uri}}</a></td>
             <td>{{hits}}</td>
             <td>{{link.timestamp.format("%-I:%M %p on %B %-d")}}</td>
-            <td><a href="/l/{{link.id}}">/l/{{link.id}}</a></td>
+            <td><a href="/l/d/{{link.id}}">Delete</a></td>
         </tr>
         {% endfor -%}
     </tbody>

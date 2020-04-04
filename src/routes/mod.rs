@@ -2,14 +2,14 @@
 
 use crate::guard::auth::Auth;
 
-use crate::{config::Config, responder::dor::DOR, templates::page::IndexTemplate};
+use crate::{config::Config, responder::dor::DOR, templates::page::IndexTemplate, database::Database};
 use rocket::{
     http::{ContentType, Status},
     response::content::Content,
     State,
 };
 use rust_embed::RustEmbed;
-use std::{fs, io::ErrorKind, path::PathBuf};
+use std::{fs, io::ErrorKind, path::PathBuf, convert::TryInto};
 
 pub mod auth;
 pub mod catcher;
@@ -18,13 +18,41 @@ pub mod upload;
 
 /// The main page
 #[get("/")]
-pub fn index<'r>(config: State<'r, Config>, auth: Option<Auth<'r>>) -> DOR<'r, IndexTemplate<'r>> {
+pub fn index<'r>(
+    config: State<'r, Config>,
+    database: Database,
+    auth: Option<Auth<'r>>,
+) -> Result<DOR<'r, IndexTemplate<'r>>, Status> {
     match auth {
-        None => DOR::login(),
-        Some(auth) => DOR::data(IndexTemplate {
-            config: config.inner(),
-            auth,
-        }),
+        None => Ok(DOR::login()),
+        Some(_) => {
+            let uploads = database.uploads().get_all_uploads().map_err(|e| {
+                error!("Error indexing uploads: {}", e);
+
+                Status::InternalServerError
+            })?;
+            let links = database.links().get_all_links().map_err(|e| {
+                error!("Error indexing links: {}", e);
+
+                Status::InternalServerError
+            })?;
+
+            Ok(DOR::data(IndexTemplate {
+                config: config.inner(),
+                link_count: links.len().try_into().map_err(|e| {
+                    error!("Error converting usize to u64: {}", e);
+    
+                    Status::InternalServerError
+                })?,
+                upload_count: uploads.len().try_into().map_err(|e| {
+                    error!("Error converting usize to u64: {}", e);
+    
+                    Status::InternalServerError
+                })?,
+                space_count: uploads.iter().fold(0, |acc, b| acc + b.size),
+                total_hits: links.iter().fold(0, |acc, (_, hits)| acc + hits)
+            }))
+        },
     }
 }
 

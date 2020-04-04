@@ -1,0 +1,14 @@
+body {
+    background-image: radial-gradient(#3a0000, #000000);
+
+    .error {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: #58585893;
+        padding: 30px 40px;
+
+        text-align: center;
+    }
+}

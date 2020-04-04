@@ -2,7 +2,6 @@
 
 use crate::{
     config::Config,
-    guard::auth::Auth,
     templates::error::{InternalErrorTemplate, PageNotFoundTemplate, UnauthorizedTemplate},
 };
 use rocket::{Request, State};
@@ -12,8 +11,8 @@ use rocket::{Request, State};
 pub fn not_found(req: &Request) -> PageNotFoundTemplate {
     PageNotFoundTemplate {
         uri: req.uri().path().into(),
-        site_name: req.guard::<State<Config>>().unwrap().name.clone(),
-        method: req.method().as_str().into(),
+        config: req.guard::<State<Config>>().unwrap().inner().clone(),
+        method: req.method().to_string(),
     }
 }
 
@@ -22,9 +21,8 @@ pub fn not_found(req: &Request) -> PageNotFoundTemplate {
 pub fn unauthorized(req: &Request) -> UnauthorizedTemplate {
     UnauthorizedTemplate {
         uri: req.uri().path().into(),
-        method: req.method().as_str().into(),
-        reason: format!("{:?}", req.guard::<Auth>().failed()),
-        site_name: req.guard::<State<Config>>().unwrap().name.clone(),
+        method: req.method().to_string(),
+        config: req.guard::<State<Config>>().unwrap().inner().clone(),
     }
 }
 
@@ -32,6 +30,6 @@ pub fn unauthorized(req: &Request) -> UnauthorizedTemplate {
 #[catch(500)]
 pub fn internal_error(req: &Request) -> InternalErrorTemplate {
     InternalErrorTemplate {
-        site_name: req.guard::<State<Config>>().unwrap().name.clone(),
+        config: req.guard::<State<Config>>().unwrap().inner().clone(),
     }
 }

@@ -1,0 +1,19 @@
+.body {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background-color: #0b5885;
+    padding: 20px 10px;
+
+    .uploads,
+    .links {
+        font-size: 20px;
+
+        .big {
+            font-size: 25px;
+            font-weight: bold;
+        }
+    }
+}

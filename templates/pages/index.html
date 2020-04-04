@@ -2,16 +2,21 @@
 
 {% block page %}Homepage{% endblock %}
 
+{% block head %}
+{%- include "../target/styles/index.css.html" -%}
+{% endblock %}
+
 {% block body %}
-    {%- match auth -%}
-        {%- when Auth::User with (user) -%}
-        <h1>Authenticated with user
-            <pre>{{user.username}}</pre> and password
-            <pre>{{user.password}}</pre>
-        </h1>
-        {%- when Auth::UploadToken with (token) -%}
-        <h1>Authenticated with an upload token
-            <pre>{{token}}</pre>
-        </h1>
-    {%- endmatch -%}
+<div class="uploads">
+    <span class="big">{{upload_count}}</span>
+    uploads take up
+    <span class="big">{{space_count|filesizeformat}}</span>
+    of space
+</div>
+<div class="links">
+    <span class="big">{{link_count}}</span>
+    links with
+    <span class="big">{{total_hits}}</span>
+    hits total
+</div>
 {% endblock %}

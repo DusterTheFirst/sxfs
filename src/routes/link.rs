@@ -6,7 +6,7 @@ use crate::{
     guard::auth::Auth,
     id::ID,
     responder::dor::DOR,
-    templates::page::LinksTemplate,
+    templates::page::{DeletedTemplate, LinksTemplate},
 };
 use chrono::Local;
 use rocket::{
@@ -61,8 +61,7 @@ pub fn all<'r>(
     database: Database,
 ) -> Result<DOR<'r, LinksTemplate<'r>>, Status> {
     Ok(match auth {
-        Some(auth) => DOR::data(LinksTemplate {
-            auth,
+        Some(_) => DOR::data(LinksTemplate {
             links: database.links().get_all_links().map_err(|e| {
                 error!("Error indexing links: {}", e);
 
@@ -98,11 +97,12 @@ pub fn follow(database: Database, id: ID) -> Result<Redirect, Status> {
 
 /// Endpoint to delete a shortened link
 #[get("/l/d/<id>")]
-pub fn delete(
+pub fn delete<'r>(
     database: Database,
-    auth: Option<Auth>,
+    config: State<'r, Config>,
+    auth: Option<Auth<'r>>,
     id: ID,
-) -> Result<DOR<'static, String>, Status> {
+) -> Result<DOR<'r, DeletedTemplate<'r>>, Status> {
     match auth {
         Some(_) => match database.links().get_link(&id) {
             Err(rusqlite::Error::QueryReturnedNoRows) => Err(Status::NotFound),
@@ -111,7 +111,7 @@ pub fn delete(
 
                 Err(Status::InternalServerError)
             }
-            Ok((link, _)) => match database.uploads().delete_upload(&id) {
+            Ok((link, _)) => match database.links().delete_link(&id) {
                 Err(e) => {
                     error!(
                         "Error deleting link: ID: {} Uri: {} Error: {}",
@@ -120,7 +120,10 @@ pub fn delete(
 
                     Err(Status::InternalServerError)
                 }
-                Ok(()) => Ok(DOR::data("Successfully deleted".into())),
+                Ok(()) => Ok(DOR::data(DeletedTemplate {
+                    config: config.inner(),
+                    resource_type: "link"
+                })),
             },
         },
         None => Ok(DOR::login_and_return(uri!(delete: id))),

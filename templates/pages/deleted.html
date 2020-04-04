@@ -1,0 +1,14 @@
+{% extends "base/page.html" %}
+
+{% block page %}Deleted{% endblock %}
+
+{% block head %}
+{%- include "../target/styles/deleted.css.html" -%}
+{% endblock %}
+
+{% block body %}
+<div class="center">
+    <div class="text">The {{resource_type}} has been successfully deleted</div>
+    <a href="/" class="home">Go Home</a>
+</div>
+{% endblock %}

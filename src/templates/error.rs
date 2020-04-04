@@ -1,6 +1,7 @@
 //! HTML esrror page askama templates
 
 use askama::Template;
+use crate::config::Config;
 
 /// Template for a 401 unauthorized error
 #[derive(Template)]
@@ -10,10 +11,8 @@ pub struct UnauthorizedTemplate {
     pub method: String,
     /// The URI that was accessed
     pub uri: String,
-    /// The reason for the lack of auth
-    pub reason: String,
-    /// The customized site name for display
-    pub site_name: String,
+    /// The site configuration
+    pub config: Config,
 }
 
 /// Template for a 404 page not found error
@@ -24,14 +23,14 @@ pub struct PageNotFoundTemplate {
     pub method: String,
     /// The missing resource
     pub uri: String,
-    /// The customized site name for display
-    pub site_name: String,
+    /// The site configuration
+    pub config: Config,
 }
 
 /// Template for a 500 internal error
 #[derive(Template)]
 #[template(path = "pages/errors/500.html")]
 pub struct InternalErrorTemplate {
-    /// The customized site name for diplay
-    pub site_name: String,
+    /// The site configuration
+    pub config: Config,
 }
