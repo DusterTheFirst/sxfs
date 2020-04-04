@@ -93,7 +93,6 @@ jobs:
       - name: cargo build
         uses: actions-rs/cargo@v1
         with:
-          use-cross: true
           command: build
           args: --release --target ${{ matrix.target }}
       - name: prepare for upload
