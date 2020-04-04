@@ -27,7 +27,7 @@ pub struct UploadResult {
 
 /// Endpoint to upload an asset
 #[post("/u?<filename>", data = "<upload>")]
-pub fn create<'r>(
+pub fn create(
     _auth: Auth,
     database: Database,
     upload_size: Option<ContentLength>,
@@ -122,7 +122,7 @@ pub fn view_by_id(database: Database, id: ID) -> Result<Redirect, Status> {
 
 /// Endpoint to access an uploaded assest by its ID and filename
 #[get("/u/<id>/<filename>")]
-pub fn view<'r>(database: Database, id: ID, filename: String) -> Result<Content<Vec<u8>>, Status> {
+pub fn view(database: Database, id: ID, filename: String) -> Result<Content<Vec<u8>>, Status> {
     match database.uploads().get_upload_metatdata(&id) {
         Err(rusqlite::Error::QueryReturnedNoRows) => Err(Status::NotFound),
         Err(e) => {

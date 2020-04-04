@@ -60,11 +60,11 @@ pub fn index<'r>(
 
 /// The urls to download the uploader templates from
 #[get("/sxcu/<filename>")]
-pub fn uploaders<'r>(
+pub fn uploaders(
     auth: Option<Auth>,
     filename: String,
 ) -> Result<DOR<'static, Content<String>>, Status> {
-    if let None = auth {
+    if auth.is_none() {
         return Ok(DOR::login_and_return(uri!(uploaders: filename)));
     }
 

@@ -28,7 +28,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for Auth<'a> {
         if let Some(token) = request.headers().get_one("X-Upload-Token") {
             // If the token matches that in the config, return success and auth type
             if config.upload_token == token {
-                return Outcome::Success(Auth::UploadToken(token.into()));
+                return Outcome::Success(Auth::UploadToken(token));
             } else {
                 return Outcome::Failure((Status::Unauthorized, ()));
             }

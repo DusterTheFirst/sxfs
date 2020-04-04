@@ -11,7 +11,7 @@ use std::marker::PhantomData;
 /// A response that can contain either data or a redirect
 pub enum DataOrRedirect<'r, T: Responder<'r>> {
     /// The resource that has been requested
-    Data(T, PhantomData<&'r T>),
+    Data(Box<T>, PhantomData<&'r T>),
     /// A redirect to another page
     Redirect(Redirect),
 }
@@ -28,7 +28,7 @@ impl<'r, T: Responder<'r>> Responder<'r> for DataOrRedirect<'r, T> {
 impl<'r, T: Responder<'r>> DataOrRedirect<'r, T> {
     /// Response data
     pub fn data(value: T) -> Self {
-        Self::Data(value, PhantomData::default())
+        Self::Data(Box::new(value), PhantomData::default())
     }
 
     /// A redirect to the login form that will put the user back to the current_uri after the auth
