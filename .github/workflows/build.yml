@@ -75,16 +75,15 @@ jobs:
         with:
           toolchain: nightly
           target: ${{ matrix.target }}
-          override: true
       - name: cargo build
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --all-features
+          args: --release --all-features --target ${{ matrix.target }}
       - name: prepare for upload
-        run: cp target/release/sxfs target/release/sxfs-${{ matrix.target }}
+        run: cp target/${{ matrix.target }}/release/sxfs target/${{ matrix.target }}/release/sxfs-${{ matrix.target }}
       - name: upload
         uses: actions/upload-artifact@v1
         with:
           name: sxfs-${{ matrix.target }}
-          path: target/release
+          path: target/${{ matrix.target }}/release
