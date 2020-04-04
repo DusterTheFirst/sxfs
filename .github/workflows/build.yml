@@ -96,9 +96,16 @@ jobs:
           args: --release --target ${{ matrix.target }}
       - name: upload
         uses: actions/upload-artifact@v1
+        if: ${{ !contains(matrix.target, "windows") }}
         with:
           name: sxfs-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/sxfs
+      - name: upload
+        uses: actions/upload-artifact@v1
+        if: ${{ contains(matrix.target, "windows") }}
+        with:
+          name: sxfs-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/sxfs.exe
   build-macos:
     name: Build macOS
     runs-on: macos-latest
