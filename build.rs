@@ -27,27 +27,26 @@ fn main() -> Result<()> {
             continue;
         }
 
-        println!(
-            "{:?}",
-            which("tsc").map_err(|e| Error::new(ErrorKind::NotFound, e))?
-        );
-        let output = Command::new(which("tsc").map_err(|e| Error::new(ErrorKind::NotFound, e))?)
-            .args(&[
-                "--outFile",
-                "target/scripts/temp.js",
-                "--alwaysStrict",
-                "--strict",
-                if debug { "--inlineSourceMap" } else { "" },
-                if debug { "--removeComments" } else { "" },
-                "--lib",
-                "dom,dom.iterable,es2016",
-                "-t",
-                "ES2016",
-                &inpath.to_string_lossy(),
-            ])
-            .output()?;
+        let args = vec![
+            "--outFile",
+            "target/scripts/temp.js",
+            "--alwaysStrict",
+            "--strict",
+            if debug { "--inlineSourceMap" } else { "" },
+            if debug { "--removeComments" } else { "" },
+            "--lib",
+            "dom,dom.iterable,es2016",
+            "-t",
+            "ES2016",
+            inpath.to_str().unwrap(),
+        ]
+        .into_iter()
+        .filter(|x| x.len() != 0)
+        .collect::<Vec<_>>();
 
-        println!("k1");
+        let output = Command::new(which("tsc").map_err(|e| Error::new(ErrorKind::NotFound, e))?)
+            .args(&args)
+            .output()?;
 
         if output.status.success() {
             fs::write(
@@ -67,17 +66,11 @@ fn main() -> Result<()> {
 
             fs::remove_file("target/scripts/temp.js")?;
         } else {
-            println!(
-                "{}",
+            panic!(
+                "TSC failed on file {:?} with args {:?}\n{}",
+                inpath,
+                args,
                 String::from_utf8_lossy(&output.stdout)
-                    .replace("\r", "")
-                    .split("\n")
-                    .filter_map(|x| if x.len() > 0 {
-                        Some(format!("cargo:warning={}\n", x))
-                    } else {
-                        None
-                    })
-                    .collect::<String>()
             );
         }
     }
