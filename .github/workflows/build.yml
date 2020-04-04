@@ -93,13 +93,11 @@ jobs:
         with:
           command: build
           args: --release --target ${{ matrix.target }}
-      - name: prepare for upload
-        run: cp target/${{ matrix.target }}/release/sxfs target/${{ matrix.target }}/release/sxfs-${{ matrix.target }}
       - name: upload
         uses: actions/upload-artifact@v1
         with:
           name: sxfs-${{ matrix.target }}
-          path: target/${{ matrix.target }}/release
+          path: target/${{ matrix.target }}/release/sxfs
   build-macos:
     name: Build macOS
     runs-on: macos-latest
@@ -128,10 +126,8 @@ jobs:
         with:
           command: build
           args: --release
-      - name: prepare for upload
-        run: cp target/release/sxfs target/release/sxfs-x86_64-apple-darwin
       - name: upload
         uses: actions/upload-artifact@v1
         with:
           name: sxfs-x86_64-apple-darwin
-          path: target/release
+          path: target/release/sxfs
