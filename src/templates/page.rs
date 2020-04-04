@@ -29,7 +29,7 @@ pub struct IndexTemplate<'a> {
     /// The amount of links on the site
     pub link_count: u64,
     /// The total hits on the links combined
-    pub total_hits: u32
+    pub total_hits: u32,
 }
 
 /// The template for the uploads page

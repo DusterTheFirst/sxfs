@@ -12,6 +12,7 @@ use std::{fs, io, path::Path};
 
 pub mod args;
 pub mod config;
+pub mod database;
 pub mod generate;
 pub mod guard;
 pub mod id;
@@ -19,7 +20,6 @@ pub mod responder;
 pub mod routes;
 pub mod templates;
 pub mod user;
-pub mod database;
 
 /// Helper function to create the parent directories of a file
 pub fn create_parent_directories<P: AsRef<Path>>(path: &P) -> io::Result<bool> {

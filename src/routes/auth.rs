@@ -33,11 +33,7 @@ pub fn login_form<'r>(
 #[post("/login", data = "<user>")]
 pub fn login_submit(mut cookies: Cookies, config: State<Config>, user: Form<User>) -> Status {
     // Check if the user submitted exixts
-    if config
-        .users
-        .iter()
-        .any(|u| *u == *user)
-    {
+    if config.users.iter().any(|u| *u == *user) {
         // If the user exists, add the cookie with their authentication information
         cookies.add(
             Cookie::build(

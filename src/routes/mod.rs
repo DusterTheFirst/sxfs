@@ -2,14 +2,16 @@
 
 use crate::guard::auth::Auth;
 
-use crate::{config::Config, responder::dor::DOR, templates::page::IndexTemplate, database::Database};
+use crate::{
+    config::Config, database::Database, responder::dor::DOR, templates::page::IndexTemplate,
+};
 use rocket::{
     http::{ContentType, Status},
     response::content::Content,
     State,
 };
 use rust_embed::RustEmbed;
-use std::{fs, io::ErrorKind, path::PathBuf, convert::TryInto};
+use std::{convert::TryInto, fs, io::ErrorKind, path::PathBuf};
 
 pub mod auth;
 pub mod catcher;
@@ -41,18 +43,18 @@ pub fn index<'r>(
                 config: config.inner(),
                 link_count: links.len().try_into().map_err(|e| {
                     error!("Error converting usize to u64: {}", e);
-    
+
                     Status::InternalServerError
                 })?,
                 upload_count: uploads.len().try_into().map_err(|e| {
                     error!("Error converting usize to u64: {}", e);
-    
+
                     Status::InternalServerError
                 })?,
                 space_count: uploads.iter().fold(0, |acc, b| acc + b.size),
-                total_hits: links.iter().fold(0, |acc, (_, hits)| acc + hits)
+                total_hits: links.iter().fold(0, |acc, (_, hits)| acc + hits),
             }))
-        },
+        }
     }
 }
 

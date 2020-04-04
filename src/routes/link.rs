@@ -122,7 +122,7 @@ pub fn delete<'r>(
                 }
                 Ok(()) => Ok(DOR::data(DeletedTemplate {
                     config: config.inner(),
-                    resource_type: "link"
+                    resource_type: "link",
                 })),
             },
         },

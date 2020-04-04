@@ -1,7 +1,7 @@
 //! HTML esrror page askama templates
 
-use askama::Template;
 use crate::config::Config;
+use askama::Template;
 
 /// Template for a 401 unauthorized error
 #[derive(Template)]

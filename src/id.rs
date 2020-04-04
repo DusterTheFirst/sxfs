@@ -1,5 +1,6 @@
 //! System-wide Identifier
 
+use base64::DecodeError;
 use derive_more::{AsRef, Deref, Display};
 use rocket::{
     http::{
@@ -14,7 +15,6 @@ use serde::Serialize;
 use std::convert::TryFrom;
 use std::{convert::TryInto, fmt, ops::Deref};
 use uuid::Uuid;
-use base64::DecodeError;
 
 /// An identifier for a unit in the system
 #[derive(Debug, Default, Deref, AsRef, Display)]
@@ -63,7 +63,9 @@ impl TryFrom<&str> for ID {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         Ok(ID(
-            base64::decode_config(value, base64::URL_SAFE_NO_PAD)?[..].try_into().map_err(|_| DecodeError::InvalidLength)?,
+            base64::decode_config(value, base64::URL_SAFE_NO_PAD)?[..]
+                .try_into()
+                .map_err(|_| DecodeError::InvalidLength)?,
         ))
     }
 }

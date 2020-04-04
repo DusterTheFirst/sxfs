@@ -20,4 +20,3 @@ impl<'a, 'r> FromRequest<'a, 'r> for ContentLength {
         }
     }
 }
-

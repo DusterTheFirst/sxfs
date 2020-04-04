@@ -1,9 +1,9 @@
 //! Askama templates for generating files or responses from the server
 
-use askama::Template;
-use std::{fs, path::Path, io};
 use crate::create_parent_directories;
+use askama::Template;
 use io::ErrorKind;
+use std::{fs, io, path::Path};
 
 pub mod error;
 pub mod page;
@@ -22,7 +22,9 @@ pub trait UpdatableTemplate: Template {
         // Create the parent directories if they do not already exist
         create_parent_directories(&path)?;
 
-        let new_content = self.render().map_err(|e| io::Error::new(ErrorKind::InvalidData, e))?;
+        let new_content = self
+            .render()
+            .map_err(|e| io::Error::new(ErrorKind::InvalidData, e))?;
 
         // Only check for update if the file already exists
         if path.as_ref().exists() {

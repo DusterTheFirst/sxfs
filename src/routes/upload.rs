@@ -89,11 +89,18 @@ pub fn all<'r>(
     Ok(match auth {
         Some(_) => DOR::data(UploadsTemplate {
             config: config.inner(),
-            uploads: database.uploads().get_all_uploads().map_err(|e| {
-                error!("Error indexing uploads: {}", e);
+            uploads: database
+                .uploads()
+                .get_all_uploads()
+                .map_err(|e| {
+                    error!("Error indexing uploads: {}", e);
 
-                Status::InternalServerError
-            })?.into_vec().into_iter().enumerate().collect(),
+                    Status::InternalServerError
+                })?
+                .into_vec()
+                .into_iter()
+                .enumerate()
+                .collect(),
         }),
         None => DOR::login_and_return(uri!(all)),
     })
