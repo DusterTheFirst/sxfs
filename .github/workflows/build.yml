@@ -64,7 +64,7 @@ jobs:
     needs: [test]
     strategy:
       matrix:
-        target: [x86_64-apple-darwin, x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu]
+        target: [i686-pc-windows-gnu, x86_64-pc-windows-gnu, x86_64-unknown-linux-gnu, i686-unknown-linux-gnu]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
@@ -102,3 +102,38 @@ jobs:
         with:
           name: sxfs-${{ matrix.target }}
           path: target/${{ matrix.target }}/release
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache cargo registry
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-buildmac
+      - name: Cache cargo index
+        uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}-buildmac
+      - name: Cache cargo build
+        uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}-buildmac
+      - uses: actions/setup-node@v1
+      - run: yarn global add typescript
+      - name: cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+      - name: prepare for upload
+        run: cp target/release/sxfs target/release/sxfs-x86_64-apple-darwin
+      - name: upload
+        uses: actions/upload-artifact@v1
+        with:
+          name: sxfs-x86_64-apple-darwin
+          path: target/release
