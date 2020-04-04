@@ -41,7 +41,7 @@ fn main() -> Result<()> {
             inpath.to_str().unwrap(),
         ]
         .into_iter()
-        .filter(|x| x.len() != 0)
+        .filter(|x| !x.is_empty())
         .collect::<Vec<_>>();
 
         let output = Command::new(which("tsc").map_err(|e| Error::new(ErrorKind::NotFound, e))?)

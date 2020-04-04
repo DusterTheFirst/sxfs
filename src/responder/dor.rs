@@ -13,7 +13,7 @@ pub enum DataOrRedirect<'r, T: Responder<'r>> {
     /// The resource that has been requested
     Data(Box<T>, PhantomData<&'r T>),
     /// A redirect to another page
-    Redirect(Redirect),
+    Redirect(Box<Redirect>),
 }
 
 impl<'r, T: Responder<'r>> Responder<'r> for DataOrRedirect<'r, T> {
@@ -33,19 +33,19 @@ impl<'r, T: Responder<'r>> DataOrRedirect<'r, T> {
 
     /// A redirect to the login form that will put the user back to the current_uri after the auth
     pub fn login_and_return<U: Into<Uri<'r>>>(current_uri: U) -> Self {
-        Self::Redirect(Redirect::to(
+        Self::Redirect(Box::new(Redirect::to(
             uri!(login_form: current_uri.into().to_string()),
-        ))
+        )))
     }
 
     /// A redirect to the login form
     pub fn login() -> Self {
-        Self::Redirect(Redirect::to(uri!(login_form: _)))
+        Self::Redirect(Box::new(Redirect::to(uri!(login_form: _))))
     }
 
     /// A redirect to the given uri
     pub fn redirect<U: Into<Uri<'static>>>(uri: U) -> Self {
-        Self::Redirect(Redirect::to(uri.into()))
+        Self::Redirect(Box::new(Redirect::to(uri.into())))
     }
 }
 
