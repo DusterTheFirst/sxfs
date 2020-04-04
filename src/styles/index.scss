@@ -4,16 +4,36 @@
     left: 50%;
     transform: translate(-50%, -50%);
 
-    background-color: #0b5885;
     padding: 20px 10px;
+    text-align: center;
 
     .uploads,
     .links {
         font-size: 20px;
+        margin: 10px 20px;
 
         .big {
             font-size: 25px;
             font-weight: bold;
+        }
+    }
+
+    .visit {
+        background-color: #0b588585;
+        border: 2px solid #0b5885;
+        color: white;
+        display: inline-block;
+        padding: 8px 20px;
+        margin: 0 20px;
+        margin-top: 10px;
+        border-radius: 10px;
+
+        &:visited {
+            color: white;
+        }
+
+        &:hover {
+            background-color: #0b5885;
         }
     }
 }
