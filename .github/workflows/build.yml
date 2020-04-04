@@ -36,6 +36,9 @@ jobs:
         with:
           path: ~/.cargo/git
           key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          components: clippy, rustfmt
       - name: cargo clippy
         uses: actions-rs/cargo@v1
         with:
