@@ -87,6 +87,8 @@ jobs:
         with:
           toolchain: nightly
           target: ${{ matrix.target }}
+      - uses: actions/setup-node@v1
+      - run: yarn global add typescript
       - name: cargo build
         uses: actions-rs/cargo@v1
         with:
