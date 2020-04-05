@@ -3,8 +3,6 @@
 ![GitHub issues](https://img.shields.io/github/issues/dusterthefirst/sxfs)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/dusterthefirst/sxfs)
 ![GitHub last commit](https://img.shields.io/github/last-commit/dusterthefirst/sxfs)
-![GitHub Release Date](https://img.shields.io/github/release-date/dusterthefirst/sxfs)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/dusterthefirst/sxfs)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/dusterthefirst/sxfs/Build)
 ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/dusterthefirst/sxfs)
 ![MicroBadger Layers](https://img.shields.io/microbadger/layers/dusterthefirst/sxfs)
@@ -43,7 +41,7 @@ If you need a binary for a platform not provided, you can build the program from
 </details>
 
 ## Docker
-
+A docker container is provided from docker hub: `dusterthefirst/sxfs`
 
 ## Setting up HTTPS
 sxfs by default does not provide https support for safety reasons.
