@@ -1,5 +1,5 @@
 # THe builder container
-FROM rust:alpine as builder
+FROM rust:slim as builder
 WORKDIR /app
 
 # Make sure all dependencies are installed
@@ -11,17 +11,15 @@ RUN npm i -g typescript
 # Copy source code over
 COPY . .
 # Compile and link the app
-RUN RUSTFLAGS="-C target-feature=-crt-static" cargo install --path .
+RUN cargo install --path .
 
 # The app container
-FROM alpine:latest
+FROM gcr.io/distroless/cc
 LABEL Author="Zachary Kohnen"
 WORKDIR /app
 
-RUN apk add --update libgcc
-
 # Copy binary to the app
-COPY --from=builder /usr/local/cargo/bin/sxfs /usr/local/bin/sxfs
+COPY --from=builder /usr/local/cargo/bin/sxfs /
 
 # Expose the data
 VOLUME [ "/app/data" ]
@@ -30,4 +28,4 @@ VOLUME [ "/app/data" ]
 EXPOSE 8000
 
 # Run the app
-CMD ["sxfs"]
+CMD ["./sxfs"]

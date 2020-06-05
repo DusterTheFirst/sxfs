@@ -125,6 +125,7 @@ fn main() -> io::Result<()> {
                 routes::link::delete,
                 routes::link::follow,
                 routes::public_files,
+                routes::upload_url,
                 routes::upload::all,
                 routes::upload::create,
                 routes::upload::delete_by_id,

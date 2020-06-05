@@ -41,7 +41,7 @@ If you need a binary for a platform not provided, you can build the program from
 </details>
 
 ## Docker
-A docker container is provided from docker hub: `dusterthefirst/sxfs`
+A docker container is provided from docker hub: `dusterthefirst/sxfs`. A volume `/app/data` is exposed to be able to persist the config and the uploaded data
 
 ## Setting up HTTPS
 sxfs by default does not provide https support for safety reasons.

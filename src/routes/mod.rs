@@ -102,3 +102,9 @@ pub fn public_files(filename: PathBuf) -> Option<Content<Vec<u8>>> {
         None => None,
     }
 }
+
+/// Endpoint to access the upload url for manual uploads
+#[get("/upload_url")]
+pub fn upload_url<'r>(config: State<'r, Config>) -> String {
+    config.upload_domain.clone().unwrap_or(config.domain.clone())
+}

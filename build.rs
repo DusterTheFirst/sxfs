@@ -1,11 +1,5 @@
 use sass_rs::{compile_file, Options, OutputStyle};
-use std::{
-    env::var,
-    fs,
-    io::{Error, ErrorKind, Result},
-    path::PathBuf,
-    process::Command,
-};
+use std::{env::var, fs, io::Result, path::PathBuf, process::Command};
 use which::which;
 
 fn main() -> Result<()> {
@@ -44,9 +38,10 @@ fn main() -> Result<()> {
         .filter(|x| !x.is_empty())
         .collect::<Vec<_>>();
 
-        let output = Command::new(which("tsc").map_err(|e| Error::new(ErrorKind::NotFound, e))?)
+        let output = Command::new(which("tsc").expect("`tsc` is not found"))
             .args(&args)
-            .output()?;
+            .output()
+            .expect("`tsc` failed to run");
 
         if output.status.success() {
             fs::write(
