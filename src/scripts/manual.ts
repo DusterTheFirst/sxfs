@@ -19,7 +19,11 @@ window.addEventListener("load", () => {
 
         await fetch(`${location.protocol}//${await (await fetch("/upload_url")).text()}/u?filename=${encodeURIComponent(filename)}`, {
             body: filecontents,
-            method: "POST"
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Cookie": document.cookie
+            }
         });
 
         location.assign("/u");
