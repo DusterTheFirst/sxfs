@@ -7,6 +7,7 @@ use rocket::{
     config::{Environment, Value},
     fairing::AdHoc,
     http::Header,
+    State,
 };
 use rocket_contrib::{helmet::SpaceHelmet, serve::StaticFiles};
 use simplelog::{
@@ -150,8 +151,16 @@ fn main() -> io::Result<()> {
                 "no-store, no-cache, must-revalidate, max-age=0",
             ));
         }))
-        .attach(AdHoc::on_response("Access-Control", |_, res| {
-            res.set_header(Header::new("Access-Control-Allow-Origin", "*"));
+        .attach(AdHoc::on_response("Access-Control", |req, res| {
+            let config = req.guard::<State<Config>>().unwrap();
+
+            res.set_header(Header::new(
+                "Access-Control-Allow-Origin",
+                config
+                    .upload_domain
+                    .clone()
+                    .unwrap_or_else(|| config.domain.clone()),
+            ));
         }))
         .attach(Database::fairing());
 
