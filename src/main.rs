@@ -161,6 +161,11 @@ fn main() -> io::Result<()> {
                     .clone()
                     .unwrap_or_else(|| config.domain.clone()),
             ));
+            res.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
+            res.set_header(Header::new(
+                "Access-Control-Allow-Methods",
+                "POST, GET, OPTIONS",
+            ));
         }))
         .attach(Database::fairing());
 
