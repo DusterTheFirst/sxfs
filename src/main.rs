@@ -150,6 +150,9 @@ fn main() -> io::Result<()> {
                 "no-store, no-cache, must-revalidate, max-age=0",
             ));
         }))
+        .attach(AdHoc::on_response("Access-Control", |_, res| {
+            res.set_header(Header::new("Access-Control-Allow-Origin", "*"));
+        }))
         .attach(Database::fairing());
 
     if cfg!(debug_assertions) {

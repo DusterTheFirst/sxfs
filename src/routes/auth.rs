@@ -21,7 +21,9 @@ pub fn login_form<'r>(
 ) -> DOR<'r, LoginTemplate<'r>> {
     let redirect = redirect.unwrap_or_else(|| "/".into());
     match auth {
-        Some(_) => DOR::redirect::<Uri<'static>>(redirect.try_into().unwrap_or_else(|_| uri!(index).into())),
+        Some(_) => DOR::redirect::<Uri<'static>>(
+            redirect.try_into().unwrap_or_else(|_| uri!(index).into()),
+        ),
         None => DOR::data(LoginTemplate {
             config: config.inner(),
             redirect,
