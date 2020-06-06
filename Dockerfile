@@ -1,4 +1,4 @@
-# THe builder container
+# The builder container
 FROM rust:slim as builder
 WORKDIR /app
 

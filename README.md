@@ -4,9 +4,11 @@
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/dusterthefirst/sxfs)
 ![GitHub last commit](https://img.shields.io/github/last-commit/dusterthefirst/sxfs)
 ![GitHub Workflow Status](https://img.shields.io/github/workflow/status/dusterthefirst/sxfs/Build)
-![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/dusterthefirst/sxfs)
-![MicroBadger Layers](https://img.shields.io/microbadger/layers/dusterthefirst/sxfs)
-![Docker Pulls](https://img.shields.io/docker/pulls/dusterthefirst/sxfs)
+[
+    ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/dusterthefirst/sxfs)
+    ![MicroBadger Layers](https://img.shields.io/microbadger/layers/dusterthefirst/sxfs)
+    ![Docker Pulls](https://img.shields.io/docker/pulls/dusterthefirst/sxfs)
+](https://hub.docker.com/repository/docker/dusterthefirst/sxfs)
 
 A single binary file server for handling uploads from the [ShareX client] with a web ui written
 in rust and containerized with docker for your pleasure
@@ -41,7 +43,8 @@ If you need a binary for a platform not provided, you can build the program from
 </details>
 
 ## Docker
-A docker container is provided from docker hub: `dusterthefirst/sxfs`. A volume `/app/data` is exposed to be able to persist the config and the uploaded data
+A docker container is provided from docker hub: `dusterthefirst/sxfs`. A volume `/app/data` is exposed to be able to persist
+the config and the uploaded data and the port 8000 is exposed for http web traffic
 
 ## Setting up HTTPS
 sxfs by default does not provide https support for safety reasons.
